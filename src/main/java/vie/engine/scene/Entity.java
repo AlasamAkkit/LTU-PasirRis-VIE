@@ -1,4 +1,4 @@
-package vie.entity;
+package vie.engine.scene;
 
 public class Entity {
     

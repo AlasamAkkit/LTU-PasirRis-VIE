@@ -1,4 +1,4 @@
-package vie.entity;
+package vie.game.agents;
 
 public class WorkerAgent {
     

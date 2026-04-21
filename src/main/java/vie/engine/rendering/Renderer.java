@@ -1,4 +1,4 @@
-package vie.engine;
+package vie.engine.rendering;
 
 public class Renderer {
     
