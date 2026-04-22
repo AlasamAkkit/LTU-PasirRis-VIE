@@ -1,5 +1,9 @@
 package vie.engine.core;
 
-public class IAppLogic {
-    
+public interface IAppLogic {
+    void init();
+    void input();
+    void update(float deltaTime);
+    void render();
+    void cleanup();
 }
