@@ -87,12 +87,15 @@ public class Mesh {
     public void destroy() {
         if (vaoId != 0) {
             GL30.glDeleteVertexArrays(vaoId);
+            vaoId = 0;
         }
         if (vboId != 0) {
             GL15.glDeleteBuffers(vboId);
+            vboId = 0;
         }
         if (iboId != 0) {
             GL15.glDeleteBuffers(iboId);
+            iboId = 0;
         }
     }
 

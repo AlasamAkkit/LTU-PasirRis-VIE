@@ -1,71 +1,59 @@
-package vie.engine.core;
+package engine.core;
 
-import vie.engine.profiler.Profiler;
-import vie.util.Config;
+import org.lwjgl.glfw.GLFW;
 
-public class Engine {
-    private final String title;
-    private final IAppLogic appLogic;
-    private final Time time;
+import engine.ecs.EcsWorld;
+import engine.profiling.Profiler;
+import engine.render.Window;
+
+public final class Engine {
+    private final EcsWorld world;
+    private final Window window;
+    private final Scene scene;
     private final Profiler profiler;
     private boolean running;
 
-    public Engine(String title, IAppLogic appLogic) {
-        this.title = title;
-        this.appLogic = appLogic;
-        this.time = new Time();
-        this.profiler = new Profiler();
-        this.running = false;
+    public Engine(EcsWorld world, Window window, Scene scene, Profiler profiler) {
+        this.world = world;
+        this.window = window;
+        this.scene = scene;
+        this.profiler = profiler;
     }
 
-    public void start() {
-        init();
-        run();
-        cleanup();
-    }
+    public void run() {
+        try {
+            window.create();
+            scene.load(world, window);
+            running = true;
 
-    private void init() {
-        appLogic.init();
-        running = true;
-        System.out.println("Engine started: " + title);
-    }
+            while (running && !window.shouldClose()) {
+                float deltaSeconds = window.beginFrame();
+                window.pollEvents();
 
-    private void run() {
-        int frameCount = 0;
-
-        while (running) {
-            time.update();
-            float deltaTime = time.getDeltaTime();
-
-            appLogic.input();
-
-            profiler.start();
-            appLogic.update(deltaTime);
-            double updateMs = profiler.stopMillis();
-
-            if (frameCount % 60 == 0) {
-                if (updateMs > Config.TARGET_UPDATE_MS) {
-                    System.out.println("WARNING: Simulation update exceeded target: " + updateMs + " ms");
-                } else {
-                    // System.out.println("Simulation update: " + updateMs + " ms");
+                if (window.isKeyPressed(GLFW.GLFW_KEY_ESCAPE)) {
+                    window.requestClose();
                 }
+
+                profiler.beginFrame();
+                profiler.beginSection("update");
+                world.updateSystems(deltaSeconds);
+                profiler.endSection("update");
+                world.flushDestroyedEntities();
+
+                profiler.beginSection("render");
+                world.renderSystems();
+                profiler.endSection("render");
+                window.swapBuffers();
+                profiler.endFrame(deltaSeconds);
             }
-
-            appLogic.render();
-            frameCount++;
+        } finally {
+            scene.unload(world, window);
+            world.cleanupSystems();
+            window.destroy();
         }
-    }
-
-    private void cleanup() {
-        appLogic.cleanup();
-        System.out.println("Engine stopped.");
     }
 
     public void stop() {
         running = false;
-    }
-
-    public String getTitle() {
-        return title;
     }
 }

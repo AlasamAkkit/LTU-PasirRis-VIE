@@ -2,7 +2,9 @@ package engine.rendering;
 
 import org.lwjgl.opengl.GL11;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import engine.camera.Camera;
 import engine.graphics.Mesh;
@@ -252,7 +254,8 @@ public class Renderer {
     }
 
     public void destroy() {
-        for (Mesh mesh : meshCache.values()) {
+        Set<Mesh> uniqueMeshes = new HashSet<>(meshCache.values());
+        for (Mesh mesh : uniqueMeshes) {
             mesh.destroy();
         }
         meshCache.clear();

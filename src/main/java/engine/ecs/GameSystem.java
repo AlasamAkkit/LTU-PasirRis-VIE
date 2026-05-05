@@ -6,4 +6,7 @@ public interface GameSystem {
 
     default void render(EcsWorld world) {
     }
+
+    default void cleanup(EcsWorld world) {
+    }
 }

@@ -39,5 +39,5 @@ java {
 }
 
 application {
-    mainClass = 'vie.Main'
+    mainClass = 'game.bootstrap.Main'
 }

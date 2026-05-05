@@ -5,6 +5,7 @@ import engine.components.InputComponent;
 import engine.components.InventoryComponent;
 import engine.components.ProductComponent;
 import engine.components.RenderComponent;
+import engine.components.TaskComponent;
 import engine.components.TransformComponent;
 import engine.ecs.EcsWorld;
 import engine.ecs.GameSystem;
@@ -25,8 +26,8 @@ import engine.rendering.Renderer;
  * 2. Each frame: update camera from input, then render entities
  */
 public final class RenderSystem implements GameSystem {
-    private static final float CAMERA_YAW = -135.0f;
-    private static final float CAMERA_PITCH = 35.0f;
+    private static final float CAMERA_YAW = 45.0f;
+    private static final float CAMERA_PITCH = 40.0f;
     private static final float CAMERA_OFFSET_X = 5.0f;
     private static final float CAMERA_OFFSET_Y = 6.0f;
     private static final float CAMERA_OFFSET_Z = 5.0f;
@@ -70,10 +71,7 @@ public final class RenderSystem implements GameSystem {
         }
 
         try {
-            // Update camera from input
             updateCamera(world);
-
-            // Lightweight HUD/status text in title bar
             updateHud(world);
 
             // Begin frame and clear
@@ -192,9 +190,10 @@ public final class RenderSystem implements GameSystem {
     }
 
     private void updateHud(EcsWorld world) {
-        String objectiveText = "Objective: move with WASD and pick cube with E";
+        String objectiveText = "Objective: deliver milk to the order box";
         String inventoryText = "Held: none";
         String interactionText = "Target: none";
+        String taskText = "Order: pending";
 
         for (int entityId : world.getActiveEntityIds()) {
             InventoryComponent inventory = world.getComponent(entityId, InventoryComponent.class);
@@ -213,12 +212,21 @@ public final class RenderSystem implements GameSystem {
             }
 
             if (input.canInteract) {
-                interactionText = "Target: " + input.interactionMode + " (F)";
+                interactionText = "Target: " + input.interactionMode + " (E)";
             }
             break;
         }
 
-        window.setTitle("LTU Pasir Ris VIE | " + objectiveText + " | " + inventoryText + " | " + interactionText);
+        for (int entityId : world.getActiveEntityIds()) {
+            TaskComponent task = world.getComponent(entityId, TaskComponent.class);
+            if (task == null) {
+                continue;
+            }
+            taskText = task.complete ? "Order: complete" : "Order: " + Math.round(task.progress * 100.0f) + "%";
+            break;
+        }
+
+        window.setTitle("LTU Pasir Ris VIE | WASD move | E interact | G drop | " + objectiveText + " | " + inventoryText + " | " + interactionText + " | " + taskText);
     }
 
     private float[] getEntityColor(RenderComponent render) {
@@ -234,6 +242,9 @@ public final class RenderSystem implements GameSystem {
         if ("placeholder-product".equals(render.meshHandle)) {
             return new float[]{0.30f, 0.85f, 0.40f, 1.0f};
         }
+        if ("placeholder-order-box".equals(render.meshHandle)) {
+            return new float[]{0.25f, 0.50f, 1.0f, 1.0f};
+        }
         return new float[]{1.0f, 1.0f, 1.0f, 1.0f};
     }
 
@@ -242,7 +253,8 @@ public final class RenderSystem implements GameSystem {
         renderer.drawMeshByHandle("cube", 0, 0.5f, -3, 0.6f, 0.6f, 0.6f, 0.25f, 0.75f, 0.35f, 1.0f);
     }
 
-    public void cleanup() {
+    @Override
+    public void cleanup(EcsWorld world) {
         if (renderer != null) {
             renderer.destroy();
         }

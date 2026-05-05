@@ -91,6 +91,12 @@ public final class EcsWorld {
         }
     }
 
+    public void cleanupSystems() {
+        for (GameSystem system : systems) {
+            system.cleanup(this);
+        }
+    }
+
     public void flushDestroyedEntities() {
         if (destroyedEntities.isEmpty()) {
             return;
