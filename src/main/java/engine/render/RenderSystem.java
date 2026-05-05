@@ -28,10 +28,10 @@ import engine.rendering.Renderer;
  */
 public final class RenderSystem implements GameSystem {
     private static final float CAMERA_YAW = 0.0f;
-    private static final float CAMERA_PITCH = 68.0f;
+    private static final float CAMERA_PITCH = 90.0f;
     private static final float CAMERA_X = 0.0f;
-    private static final float CAMERA_Y = 10.5f;
-    private static final float CAMERA_Z = 6.5f;
+    private static final float CAMERA_Y = 14.0f;
+    private static final float CAMERA_Z = 0.0f;
 
     private final Window window;
     private Renderer renderer;

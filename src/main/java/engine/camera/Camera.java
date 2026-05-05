@@ -130,6 +130,11 @@ public class Camera {
     }
 
     private void computeViewMatrix() {
+        if (pitch >= 89.9f) {
+            computeTopDownViewMatrix();
+            return;
+        }
+
         // Convert yaw/pitch to forward/right/up vectors
         float yawRad = (float) Math.toRadians(yaw);
         float pitchRad = (float) Math.toRadians(pitch);
@@ -186,6 +191,23 @@ public class Camera {
         viewMatrix[13] = -(upX * position.x + upY * position.y + upZ * position.z);
         viewMatrix[14] = (forwardX * position.x + forwardY * position.y + forwardZ * position.z);
         viewMatrix[15] = 1;
+    }
+
+    private void computeTopDownViewMatrix() {
+        for (int i = 0; i < 16; i++) {
+            viewMatrix[i] = 0.0f;
+        }
+
+        // Exact overhead camera:
+        // screen X = world X, screen Y = -world Z, depth = world Y below the camera.
+        viewMatrix[0] = 1.0f;
+        viewMatrix[9] = -1.0f;
+        viewMatrix[6] = 1.0f;
+        viewMatrix[15] = 1.0f;
+
+        viewMatrix[12] = -position.x;
+        viewMatrix[13] = position.z;
+        viewMatrix[14] = -position.y;
     }
 
     private void computeProjectionMatrix() {
