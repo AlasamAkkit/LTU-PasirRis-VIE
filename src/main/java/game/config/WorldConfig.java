@@ -6,18 +6,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class WorldConfig {
-    public final PlayerSpawn player = new PlayerSpawn(new Vector3(0.0f, 1.0f, 4.0f));
+    public final PlayerSpawn player = new PlayerSpawn(new Vector3(0.0f, 0.0f, 4.0f));
     public final List<ShelfSpawn> shelves = new ArrayList<>();
     public final List<ProductSpawn> products = new ArrayList<>();
     public final List<OrderBoxSpawn> orderBoxes = new ArrayList<>();
 
     public static WorldConfig demo() {
         WorldConfig config = new WorldConfig();
-        config.shelves.add(new ShelfSpawn("shelf-a", new Vector3(-2.0f, 0.0f, -2.0f)));
-        config.shelves.add(new ShelfSpawn("shelf-b", new Vector3(2.0f, 0.0f, -2.0f)));
-        config.products.add(new ProductSpawn("milk", new Vector3(-2.0f, 1.0f, -1.5f)));
-        config.products.add(new ProductSpawn("bread", new Vector3(2.0f, 1.0f, -1.5f)));
-        config.orderBoxes.add(new OrderBoxSpawn(new Vector3(0.0f, 0.5f, -4.0f), List.of("milk", "bread")));
+        config.shelves.add(new ShelfSpawn("shelf-a", new Vector3(-3.5f, 0.0f, -1.0f)));
+        config.shelves.add(new ShelfSpawn("shelf-b", new Vector3(-1.0f, 0.0f, -2.8f)));
+        config.shelves.add(new ShelfSpawn("shelf-c", new Vector3(1.0f, 0.0f, -2.8f)));
+        config.shelves.add(new ShelfSpawn("shelf-d", new Vector3(3.5f, 0.0f, -1.0f)));
+
+        config.products.add(new ProductSpawn("milk", new Vector3(-3.5f, 0.0f, -1.0f)));
+        config.products.add(new ProductSpawn("bread", new Vector3(-1.0f, 0.0f, -2.8f)));
+        config.products.add(new ProductSpawn("juice", new Vector3(1.0f, 0.0f, -2.8f)));
+        config.products.add(new ProductSpawn("apples", new Vector3(3.5f, 0.0f, -1.0f)));
+
+        config.orderBoxes.add(new OrderBoxSpawn(new Vector3(0.0f, 0.4f, 3.2f), List.of("milk", "bread", "juice")));
         return config;
     }
 

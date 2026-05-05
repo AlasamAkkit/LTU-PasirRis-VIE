@@ -52,6 +52,7 @@ public final class InteractionExecutionSystem implements GameSystem {
         if (render != null) {
             render.visible = false;
         }
+        System.out.println("[Interaction] Picked up product: " + product.productType);
     }
 
     private void placeHeldItemIntoOrderBox(EcsWorld world, int holderEntityId, InventoryComponent inventory, OrderBoxComponent orderBox) {
@@ -73,6 +74,7 @@ public final class InteractionExecutionSystem implements GameSystem {
         orderBox.receivedItemEntityIds.add(heldEntityId);
         product.holderEntityId = holderEntityId;
         product.availableInWorld = false;
+        System.out.println("[Interaction] Placed product into order box: " + product.productType);
     }
 
     private void dropHeldItem(EcsWorld world, InventoryComponent inventory, TransformComponent holderTransform) {
@@ -95,6 +97,9 @@ public final class InteractionExecutionSystem implements GameSystem {
         RenderComponent render = world.getComponent(heldEntityId, RenderComponent.class);
         if (render != null) {
             render.visible = true;
+        }
+        if (product != null) {
+            System.out.println("[Interaction] Dropped product: " + product.productType);
         }
     }
 }

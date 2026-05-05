@@ -39,6 +39,13 @@ public final class InteractionDetectionSystem implements GameSystem {
                 ProductComponent product = world.getComponent(candidateId, ProductComponent.class);
                 OrderBoxComponent orderBox = world.getComponent(candidateId, OrderBoxComponent.class);
 
+                if (product != null && !product.availableInWorld) {
+                    continue;
+                }
+                if (orderBox != null && orderBox.complete) {
+                    continue;
+                }
+
                 boolean interactable = product != null || orderBox != null;
                 if (!interactable) {
                     continue;

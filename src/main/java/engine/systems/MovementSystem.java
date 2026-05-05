@@ -20,30 +20,40 @@ public final class MovementSystem implements GameSystem {
             }
 
             Vector3 direction = new Vector3();
+            float yawRad = (float) Math.toRadians(transform.rotation.y);
+            float cosYaw = (float) Math.cos(yawRad);
+            float sinYaw = (float) Math.sin(yawRad);
+
+            float forwardX = -sinYaw;
+            float forwardZ = -cosYaw;
+            float rightX = cosYaw;
+            float rightZ = sinYaw;
+
             if (input.moveForward) {
-                direction.z -= 1.0f;
+                direction.x += forwardX;
+                direction.z += forwardZ;
             }
             if (input.moveBackward) {
-                direction.z += 1.0f;
+                direction.x -= forwardX;
+                direction.z -= forwardZ;
             }
             if (input.moveLeft) {
-                direction.x -= 1.0f;
+                direction.x -= rightX;
+                direction.z -= rightZ;
             }
             if (input.moveRight) {
-                direction.x += 1.0f;
-            }
-            if (input.moveUp) {
-                direction.y += 1.0f;
-            }
-            if (input.moveDown) {
-                direction.y -= 1.0f;
+                direction.x += rightX;
+                direction.z += rightZ;
             }
 
-            float lengthSquared = direction.lengthSquared();
+            float lengthSquared = direction.x * direction.x + direction.z * direction.z;
             if (lengthSquared > 0.0f) {
                 float inverseLength = 1.0f / (float) Math.sqrt(lengthSquared);
-                direction.scale(inverseLength);
-                transform.position.add(direction.x * velocity.speed * deltaSeconds, direction.y * velocity.speed * deltaSeconds, direction.z * velocity.speed * deltaSeconds);
+                direction.x *= inverseLength;
+                direction.z *= inverseLength;
+                transform.position.add(direction.x * velocity.speed * deltaSeconds, 0.0f, direction.z * velocity.speed * deltaSeconds);
+                // Ensure player Y position stays at ground level (0.0f)
+                transform.position.y = 0.0f;
             }
         }
     }

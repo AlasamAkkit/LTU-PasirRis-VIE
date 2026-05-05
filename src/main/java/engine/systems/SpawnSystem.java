@@ -1,6 +1,5 @@
 package engine.systems;
 
-import engine.components.AIComponent;
 import engine.components.ColliderComponent;
 import engine.components.InputComponent;
 import engine.components.InventoryComponent;
@@ -26,12 +25,21 @@ public final class SpawnSystem implements GameSystem {
         int entityId = world.createEntity();
         TransformComponent transform = world.addComponent(entityId, new TransformComponent());
         transform.position.set(position);
-        world.addComponent(entityId, new RenderComponent("placeholder-player", "placeholder-player-material"));
+        RenderComponent render = world.addComponent(entityId, new RenderComponent("placeholder-player", "placeholder-player-material"));
+        render.visible = false;
         world.addComponent(entityId, new ColliderComponent());
         world.addComponent(entityId, new VelocityComponent());
         world.addComponent(entityId, new InputComponent());
         world.addComponent(entityId, new InventoryComponent());
-        world.addComponent(entityId, new AIComponent());
+        return entityId;
+    }
+
+    public int spawnRoom(EcsWorld world, Vector3 position, Vector3 scale) {
+        int entityId = world.createEntity();
+        TransformComponent transform = world.addComponent(entityId, new TransformComponent());
+        transform.position.set(position);
+        transform.scale.set(scale);
+        world.addComponent(entityId, new RenderComponent("room", "room-material"));
         return entityId;
     }
 
@@ -39,6 +47,7 @@ public final class SpawnSystem implements GameSystem {
         int entityId = world.createEntity();
         TransformComponent transform = world.addComponent(entityId, new TransformComponent());
         transform.position.set(position);
+        transform.scale.set(1.2f, 1.8f, 0.8f);
         world.addComponent(entityId, new RenderComponent("placeholder-shelf", "placeholder-shelf-material"));
         ShelfComponent shelf = world.addComponent(entityId, new ShelfComponent());
         shelf.shelfId = shelfId;
@@ -50,6 +59,7 @@ public final class SpawnSystem implements GameSystem {
         int entityId = world.createEntity();
         TransformComponent transform = world.addComponent(entityId, new TransformComponent());
         transform.position.set(position);
+        transform.scale.set(0.35f, 0.35f, 0.35f);
         world.addComponent(entityId, new RenderComponent("placeholder-product", "placeholder-product-material"));
         world.addComponent(entityId, new ColliderComponent());
         world.addComponent(entityId, new ProductComponent(productType));
@@ -60,6 +70,7 @@ public final class SpawnSystem implements GameSystem {
         int entityId = world.createEntity();
         TransformComponent transform = world.addComponent(entityId, new TransformComponent());
         transform.position.set(position);
+        transform.scale.set(0.9f, 0.6f, 0.9f);
         world.addComponent(entityId, new RenderComponent("placeholder-order-box", "placeholder-order-box-material"));
         world.addComponent(entityId, new ColliderComponent());
         OrderBoxComponent orderBox = world.addComponent(entityId, new OrderBoxComponent());

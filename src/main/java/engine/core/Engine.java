@@ -28,6 +28,10 @@ public final class Engine {
                 float deltaSeconds = window.beginFrame();
 
                 window.pollEvents();
+                // Allow ESC to close the window
+                if (window.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE)) {
+                    window.requestClose();
+                }
 
                 profiler.beginSection("simulation");
                 world.updateSystems(deltaSeconds);
