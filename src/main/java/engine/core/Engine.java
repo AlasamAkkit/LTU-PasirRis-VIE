@@ -1,60 +1,71 @@
-package engine.core;
+package vie.engine.core;
 
-import engine.ecs.EcsWorld;
-import engine.profiling.Profiler;
-import engine.render.Window;
+import vie.engine.profiler.Profiler;
+import vie.util.Config;
 
-public final class Engine {
-    private final EcsWorld world;
-    private final Window window;
-    private final Scene scene;
+public class Engine {
+    private final String title;
+    private final IAppLogic appLogic;
+    private final Time time;
     private final Profiler profiler;
     private boolean running;
 
-    public Engine(EcsWorld world, Window window, Scene scene, Profiler profiler) {
-        this.world = world;
-        this.window = window;
-        this.scene = scene;
-        this.profiler = profiler;
+    public Engine(String title, IAppLogic appLogic) {
+        this.title = title;
+        this.appLogic = appLogic;
+        this.time = new Time();
+        this.profiler = new Profiler();
+        this.running = false;
     }
 
-    public void run() {
-        window.create();
-        scene.load(world, window);
+    public void start() {
+        init();
+        run();
+        cleanup();
+    }
+
+    private void init() {
+        appLogic.init();
         running = true;
+        System.out.println("Engine started: " + title);
+    }
 
-        try {
-            while (running && !window.shouldClose()) {
-                float deltaSeconds = window.beginFrame();
+    private void run() {
+        int frameCount = 0;
 
-                window.pollEvents();
-                // Allow ESC to close the window
-                if (window.isKeyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE)) {
-                    window.requestClose();
+        while (running) {
+            time.update();
+            float deltaTime = time.getDeltaTime();
+
+            appLogic.input();
+
+            profiler.start();
+            appLogic.update(deltaTime);
+            double updateMs = profiler.stopMillis();
+
+            if (frameCount % 60 == 0) {
+                if (updateMs > Config.TARGET_UPDATE_MS) {
+                    System.out.println("WARNING: Simulation update exceeded target: " + updateMs + " ms");
+                } else {
+                    // System.out.println("Simulation update: " + updateMs + " ms");
                 }
-
-                profiler.beginSection("simulation");
-                world.updateSystems(deltaSeconds);
-                profiler.endSection("simulation");
-
-                world.flushDestroyedEntities();
-
-                window.clear();
-
-                profiler.beginSection("render");
-                world.renderSystems();
-                profiler.endSection("render");
-
-                window.swapBuffers();
-                profiler.endFrame(deltaSeconds);
             }
-        } finally {
-            scene.unload(world, window);
-            window.destroy();
+
+            appLogic.render();
+            frameCount++;
         }
+    }
+
+    private void cleanup() {
+        appLogic.cleanup();
+        System.out.println("Engine stopped.");
     }
 
     public void stop() {
         running = false;
+    }
+
+    public String getTitle() {
+        return title;
     }
 }
