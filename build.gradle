@@ -9,7 +9,8 @@ repositories {
 
 ext {
     lwjglVersion = "3.3.6"
-    lwjglNatives = "natives-windows"   // change to natives-linux or natives-macos on other OS
+    osName = System.getProperty('os.name').toLowerCase(Locale.ROOT)
+    lwjglNatives = osName.contains('win') ? 'natives-windows' : osName.contains('mac') ? 'natives-macos' : 'natives-linux'
 }
 
 dependencies {
@@ -39,5 +40,9 @@ java {
 }
 
 application {
-    mainClass = 'vie.Main'
+    mainClass = 'game.bootstrap.Main'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
 }
