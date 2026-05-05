@@ -5,9 +5,12 @@ import engine.components.TransformComponent;
 import engine.components.VelocityComponent;
 import engine.ecs.EcsWorld;
 import engine.ecs.GameSystem;
-import engine.math.Vector3;
-
 public final class MovementSystem implements GameSystem {
+    private static final float MIN_X = -4.6f;
+    private static final float MAX_X = 4.6f;
+    private static final float MIN_Z = -4.4f;
+    private static final float MAX_Z = 4.4f;
+
     @Override
     public void update(EcsWorld world, float deltaSeconds) {
         for (int entityId : world.getActiveEntityIds()) {
@@ -19,42 +22,36 @@ public final class MovementSystem implements GameSystem {
                 continue;
             }
 
-            Vector3 direction = new Vector3();
-            float yawRad = (float) Math.toRadians(transform.rotation.y);
-            float cosYaw = (float) Math.cos(yawRad);
-            float sinYaw = (float) Math.sin(yawRad);
-
-            float forwardX = -sinYaw;
-            float forwardZ = -cosYaw;
-            float rightX = cosYaw;
-            float rightZ = sinYaw;
+            float directionX = 0.0f;
+            float directionZ = 0.0f;
 
             if (input.moveForward) {
-                direction.x += forwardX;
-                direction.z += forwardZ;
+                directionZ -= 1.0f;
             }
             if (input.moveBackward) {
-                direction.x -= forwardX;
-                direction.z -= forwardZ;
+                directionZ += 1.0f;
             }
             if (input.moveLeft) {
-                direction.x -= rightX;
-                direction.z -= rightZ;
+                directionX -= 1.0f;
             }
             if (input.moveRight) {
-                direction.x += rightX;
-                direction.z += rightZ;
+                directionX += 1.0f;
             }
 
-            float lengthSquared = direction.x * direction.x + direction.z * direction.z;
+            float lengthSquared = directionX * directionX + directionZ * directionZ;
             if (lengthSquared > 0.0f) {
                 float inverseLength = 1.0f / (float) Math.sqrt(lengthSquared);
-                direction.x *= inverseLength;
-                direction.z *= inverseLength;
-                transform.position.add(direction.x * velocity.speed * deltaSeconds, 0.0f, direction.z * velocity.speed * deltaSeconds);
-                // Ensure player Y position stays at ground level (0.0f)
+                directionX *= inverseLength;
+                directionZ *= inverseLength;
+                transform.position.add(directionX * velocity.speed * deltaSeconds, 0.0f, directionZ * velocity.speed * deltaSeconds);
+                transform.position.x = clamp(transform.position.x, MIN_X, MAX_X);
                 transform.position.y = 0.0f;
+                transform.position.z = clamp(transform.position.z, MIN_Z, MAX_Z);
             }
         }
+    }
+
+    private float clamp(float value, float min, float max) {
+        return Math.max(min, Math.min(max, value));
     }
 }
