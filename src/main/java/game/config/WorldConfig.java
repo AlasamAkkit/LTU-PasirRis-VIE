@@ -13,13 +13,13 @@ public final class WorldConfig {
 
     public static WorldConfig demo() {
         WorldConfig config = new WorldConfig();
-        config.shelves.add(new ShelfSpawn("dairy-shelf", new Vector3(-3.2f, 0.9f, -1.8f)));
-        config.shelves.add(new ShelfSpawn("bakery-shelf", new Vector3(0.0f, 0.9f, -2.8f)));
-        config.shelves.add(new ShelfSpawn("produce-shelf", new Vector3(3.2f, 0.9f, -1.8f)));
+        config.shelves.add(new ShelfSpawn("dairy-shelf", new Vector3(-3.2f, 0.9f, -2.0f)));
+        config.shelves.add(new ShelfSpawn("bakery-shelf", new Vector3(0.0f, 0.9f, -2.9f)));
+        config.shelves.add(new ShelfSpawn("produce-shelf", new Vector3(3.2f, 0.9f, -2.0f)));
 
-        config.products.add(new ProductSpawn("milk", new Vector3(-3.2f, 0.35f, -0.95f)));
-        config.products.add(new ProductSpawn("bread", new Vector3(0.0f, 0.35f, -1.95f)));
-        config.products.add(new ProductSpawn("apples", new Vector3(3.2f, 0.35f, -0.95f)));
+        config.products.add(new ProductSpawn("milk", new Vector3(-3.2f, 0.55f, -1.35f)));
+        config.products.add(new ProductSpawn("bread", new Vector3(0.0f, 0.52f, -2.25f)));
+        config.products.add(new ProductSpawn("apples", new Vector3(3.2f, 0.52f, -1.35f)));
 
         config.orderBoxes.add(new OrderBoxSpawn(new Vector3(0.0f, 0.3f, 2.8f), List.of("milk")));
         return config;

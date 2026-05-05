@@ -235,8 +235,13 @@ public final class RenderSystem implements GameSystem {
     }
 
     private float[] getEntityColor(EcsWorld world, int entityId, RenderComponent render) {
+        float[] materialColor = getMaterialColor(render.materialHandle);
+        if (materialColor != null) {
+            return materialColor;
+        }
+
         if ("room".equals(render.meshHandle)) {
-            return new float[]{0.82f, 0.78f, 0.70f, 1.0f};
+            return new float[]{0.72f, 0.76f, 0.78f, 1.0f};
         }
         if ("placeholder-shelf".equals(render.meshHandle)) {
             return new float[]{0.55f, 0.35f, 0.22f, 1.0f};
@@ -267,6 +272,43 @@ public final class RenderSystem implements GameSystem {
             return new float[]{0.25f, 0.50f, 1.0f, 1.0f};
         }
         return new float[]{1.0f, 1.0f, 1.0f, 1.0f};
+    }
+
+    private float[] getMaterialColor(String materialHandle) {
+        if ("shelf-back-material".equals(materialHandle)) {
+            return new float[]{0.34f, 0.24f, 0.18f, 1.0f};
+        }
+        if ("shelf-plank-material".equals(materialHandle)) {
+            return new float[]{0.58f, 0.40f, 0.26f, 1.0f};
+        }
+        if ("shelf-frame-material".equals(materialHandle)) {
+            return new float[]{0.24f, 0.17f, 0.13f, 1.0f};
+        }
+        if ("dairy-sign-material".equals(materialHandle)) {
+            return new float[]{0.46f, 0.78f, 1.0f, 1.0f};
+        }
+        if ("bakery-sign-material".equals(materialHandle)) {
+            return new float[]{1.0f, 0.72f, 0.32f, 1.0f};
+        }
+        if ("produce-sign-material".equals(materialHandle)) {
+            return new float[]{0.40f, 0.82f, 0.42f, 1.0f};
+        }
+        if ("generic-sign-material".equals(materialHandle)) {
+            return new float[]{0.82f, 0.82f, 0.82f, 1.0f};
+        }
+        if ("aisle-floor-material".equals(materialHandle)) {
+            return new float[]{0.63f, 0.66f, 0.68f, 1.0f};
+        }
+        if ("aisle-line-material".equals(materialHandle)) {
+            return new float[]{0.95f, 0.88f, 0.38f, 1.0f};
+        }
+        if ("checkout-counter-material".equals(materialHandle)) {
+            return new float[]{0.12f, 0.32f, 0.42f, 1.0f};
+        }
+        if ("order-zone-material".equals(materialHandle)) {
+            return new float[]{0.16f, 0.38f, 0.78f, 1.0f};
+        }
+        return null;
     }
 
     private void renderDemoScene() {
