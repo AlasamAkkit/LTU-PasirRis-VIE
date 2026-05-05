@@ -3,6 +3,7 @@ package engine.render;
 import engine.camera.Camera;
 import engine.components.InputComponent;
 import engine.components.InventoryComponent;
+import engine.components.OrderBoxComponent;
 import engine.components.ProductComponent;
 import engine.components.RenderComponent;
 import engine.components.TaskComponent;
@@ -90,7 +91,7 @@ public final class RenderSystem implements GameSystem {
                         RenderComponent render = world.getComponent(entityId, RenderComponent.class);
                     
                         if (render.visible && render.meshHandle != null) {
-                            float[] color = getEntityColor(render);
+                            float[] color = getEntityColor(world, entityId, render);
                             // Draw the mesh using its transform and render data
                             renderer.drawMeshByHandle(
                                 render.meshHandle,
@@ -194,6 +195,7 @@ public final class RenderSystem implements GameSystem {
         String inventoryText = "Held: none";
         String interactionText = "Target: none";
         String taskText = "Order: pending";
+        String feedbackText = "";
 
         for (int entityId : world.getActiveEntityIds()) {
             InventoryComponent inventory = world.getComponent(entityId, InventoryComponent.class);
@@ -214,6 +216,9 @@ public final class RenderSystem implements GameSystem {
             if (input.canInteract) {
                 interactionText = "Target: " + input.interactionMode + " (E)";
             }
+            if (input.feedbackMessage != null && !input.feedbackMessage.isEmpty()) {
+                feedbackText = " | " + input.feedbackMessage;
+            }
             break;
         }
 
@@ -226,10 +231,10 @@ public final class RenderSystem implements GameSystem {
             break;
         }
 
-        window.setTitle("LTU Pasir Ris VIE | WASD move | E interact | G drop | " + objectiveText + " | " + inventoryText + " | " + interactionText + " | " + taskText);
+        window.setTitle("LTU Pasir Ris VIE | WASD move | E interact | G drop | " + objectiveText + " | " + inventoryText + " | " + interactionText + " | " + taskText + feedbackText);
     }
 
-    private float[] getEntityColor(RenderComponent render) {
+    private float[] getEntityColor(EcsWorld world, int entityId, RenderComponent render) {
         if ("room".equals(render.meshHandle)) {
             return new float[]{0.82f, 0.78f, 0.70f, 1.0f};
         }
@@ -240,9 +245,25 @@ public final class RenderSystem implements GameSystem {
             return new float[]{0.95f, 0.95f, 0.95f, 1.0f};
         }
         if ("placeholder-product".equals(render.meshHandle)) {
+            ProductComponent product = world.getComponent(entityId, ProductComponent.class);
+            if (product != null) {
+                if ("milk".equals(product.productType)) {
+                    return new float[]{0.92f, 0.96f, 1.0f, 1.0f};
+                }
+                if ("bread".equals(product.productType)) {
+                    return new float[]{0.95f, 0.68f, 0.30f, 1.0f};
+                }
+                if ("apples".equals(product.productType)) {
+                    return new float[]{0.90f, 0.18f, 0.18f, 1.0f};
+                }
+            }
             return new float[]{0.30f, 0.85f, 0.40f, 1.0f};
         }
         if ("placeholder-order-box".equals(render.meshHandle)) {
+            OrderBoxComponent orderBox = world.getComponent(entityId, OrderBoxComponent.class);
+            if (orderBox != null && orderBox.complete) {
+                return new float[]{0.20f, 0.78f, 0.38f, 1.0f};
+            }
             return new float[]{0.25f, 0.50f, 1.0f, 1.0f};
         }
         return new float[]{1.0f, 1.0f, 1.0f, 1.0f};

@@ -12,4 +12,6 @@ public class InputComponent {
     public boolean canInteract;
     public int selectedInteractableEntityId = -1;
     public String interactionMode = "none";
+    public String feedbackMessage = "";
+    public float feedbackSecondsRemaining;
 }

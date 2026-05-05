@@ -21,8 +21,11 @@ public final class InteractionExecutionSystem implements GameSystem {
                 continue;
             }
 
+            updateFeedbackTimer(input, deltaSeconds);
+            updateHeldItemVisual(world, inventory, playerTransform);
+
             if (input.dropPressed) {
-                dropHeldItem(world, inventory, playerTransform);
+                dropHeldItem(world, input, inventory, playerTransform);
             }
 
             if (input.interactPressed && input.selectedInteractableEntityId != -1) {
@@ -31,16 +34,17 @@ public final class InteractionExecutionSystem implements GameSystem {
                 OrderBoxComponent orderBox = world.getComponent(targetEntityId, OrderBoxComponent.class);
 
                 if (product != null) {
-                    pickUpProduct(world, entityId, targetEntityId, inventory, product);
+                    pickUpProduct(world, input, entityId, targetEntityId, inventory, product);
                 } else if (orderBox != null) {
-                    placeHeldItemIntoOrderBox(world, entityId, inventory, orderBox);
+                    placeHeldItemIntoOrderBox(world, input, inventory, orderBox);
                 }
             }
         }
     }
 
-    private void pickUpProduct(EcsWorld world, int holderEntityId, int productEntityId, InventoryComponent inventory, ProductComponent product) {
+    private void pickUpProduct(EcsWorld world, InputComponent input, int holderEntityId, int productEntityId, InventoryComponent inventory, ProductComponent product) {
         if (inventory.isFull() || inventory.contains(productEntityId) || !product.availableInWorld) {
+            setFeedback(input, "Already carrying an item");
             return;
         }
 
@@ -50,13 +54,15 @@ public final class InteractionExecutionSystem implements GameSystem {
 
         RenderComponent render = world.getComponent(productEntityId, RenderComponent.class);
         if (render != null) {
-            render.visible = false;
+            render.visible = true;
         }
+        setFeedback(input, "Picked up " + product.productType);
         System.out.println("[Interaction] Picked up product: " + product.productType);
     }
 
-    private void placeHeldItemIntoOrderBox(EcsWorld world, int holderEntityId, InventoryComponent inventory, OrderBoxComponent orderBox) {
+    private void placeHeldItemIntoOrderBox(EcsWorld world, InputComponent input, InventoryComponent inventory, OrderBoxComponent orderBox) {
         if (inventory.heldEntityIds.isEmpty()) {
+            setFeedback(input, "Pick up an item first");
             return;
         }
 
@@ -67,18 +73,27 @@ public final class InteractionExecutionSystem implements GameSystem {
         }
 
         if (!orderBox.requiredProductTypes.contains(product.productType)) {
+            String requiredProduct = orderBox.requiredProductTypes.isEmpty() ? "another item" : orderBox.requiredProductTypes.get(0);
+            setFeedback(input, "Order wants " + requiredProduct + ", not " + product.productType);
             return;
         }
 
         inventory.heldEntityIds.remove(0);
         orderBox.receivedItemEntityIds.add(heldEntityId);
-        product.holderEntityId = holderEntityId;
+        product.holderEntityId = -1;
         product.availableInWorld = false;
+
+        RenderComponent render = world.getComponent(heldEntityId, RenderComponent.class);
+        if (render != null) {
+            render.visible = false;
+        }
+        setFeedback(input, "Delivered " + product.productType + " - order complete");
         System.out.println("[Interaction] Placed product into order box: " + product.productType);
     }
 
-    private void dropHeldItem(EcsWorld world, InventoryComponent inventory, TransformComponent holderTransform) {
+    private void dropHeldItem(EcsWorld world, InputComponent input, InventoryComponent inventory, TransformComponent holderTransform) {
         if (inventory.heldEntityIds.isEmpty()) {
+            setFeedback(input, "Nothing to drop");
             return;
         }
 
@@ -91,7 +106,8 @@ public final class InteractionExecutionSystem implements GameSystem {
 
         TransformComponent productTransform = world.getComponent(heldEntityId, TransformComponent.class);
         if (productTransform != null) {
-            productTransform.position.set(holderTransform.position);
+            productTransform.position.set(holderTransform.position.x, 0.35f, holderTransform.position.z - 0.75f);
+            productTransform.scale.set(0.35f, 0.35f, 0.35f);
         }
 
         RenderComponent render = world.getComponent(heldEntityId, RenderComponent.class);
@@ -99,7 +115,35 @@ public final class InteractionExecutionSystem implements GameSystem {
             render.visible = true;
         }
         if (product != null) {
+            setFeedback(input, "Dropped " + product.productType);
             System.out.println("[Interaction] Dropped product: " + product.productType);
         }
+    }
+
+    private void updateHeldItemVisual(EcsWorld world, InventoryComponent inventory, TransformComponent holderTransform) {
+        for (int heldEntityId : inventory.heldEntityIds) {
+            TransformComponent productTransform = world.getComponent(heldEntityId, TransformComponent.class);
+            if (productTransform == null) {
+                continue;
+            }
+            productTransform.position.set(holderTransform.position.x, holderTransform.position.y + 1.15f, holderTransform.position.z);
+            productTransform.scale.set(0.28f, 0.28f, 0.28f);
+        }
+    }
+
+    private void updateFeedbackTimer(InputComponent input, float deltaSeconds) {
+        if (input.feedbackSecondsRemaining <= 0.0f) {
+            input.feedbackMessage = "";
+            return;
+        }
+        input.feedbackSecondsRemaining -= deltaSeconds;
+        if (input.feedbackSecondsRemaining <= 0.0f) {
+            input.feedbackMessage = "";
+        }
+    }
+
+    private void setFeedback(InputComponent input, String message) {
+        input.feedbackMessage = message;
+        input.feedbackSecondsRemaining = 2.5f;
     }
 }

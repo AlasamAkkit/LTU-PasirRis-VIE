@@ -24,6 +24,7 @@ public final class InteractionDetectionSystem implements GameSystem {
             int selectedEntityId = -1;
             String interactionMode = "none";
             float bestDistance = Float.MAX_VALUE;
+            boolean isHoldingItem = !inventory.heldEntityIds.isEmpty();
 
             for (int candidateId : world.getActiveEntityIds()) {
                 if (candidateId == entityId) {
@@ -46,7 +47,7 @@ public final class InteractionDetectionSystem implements GameSystem {
                     continue;
                 }
 
-                boolean interactable = product != null || orderBox != null;
+                boolean interactable = isHoldingItem ? orderBox != null : product != null;
                 if (!interactable) {
                     continue;
                 }
