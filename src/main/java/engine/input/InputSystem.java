@@ -28,10 +28,10 @@ public final class InputSystem implements GameSystem {
             input.moveBackward = window.isKeyPressed(GLFW.GLFW_KEY_S);
             input.moveLeft = window.isKeyPressed(GLFW.GLFW_KEY_A);
             input.moveRight = window.isKeyPressed(GLFW.GLFW_KEY_D);
-            input.moveUp = window.isKeyPressed(GLFW.GLFW_KEY_E);
-            input.moveDown = window.isKeyPressed(GLFW.GLFW_KEY_Q);
+            input.moveUp = window.isKeyPressed(GLFW.GLFW_KEY_SPACE);
+            input.moveDown = window.isKeyPressed(GLFW.GLFW_KEY_LEFT_SHIFT);
 
-            boolean interactKeyDown = window.isKeyPressed(GLFW.GLFW_KEY_F);
+            boolean interactKeyDown = window.isKeyPressed(GLFW.GLFW_KEY_E);
             input.interactPressed = interactKeyDown && !previousInteractKeyDown;
             previousInteractKeyDown = interactKeyDown;
 

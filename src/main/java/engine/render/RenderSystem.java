@@ -3,10 +3,8 @@ package engine.render;
 import engine.camera.Camera;
 import engine.components.InputComponent;
 import engine.components.InventoryComponent;
-import engine.components.OrderBoxComponent;
 import engine.components.ProductComponent;
 import engine.components.RenderComponent;
-import engine.components.TaskComponent;
 import engine.components.TransformComponent;
 import engine.ecs.EcsWorld;
 import engine.ecs.GameSystem;
@@ -27,16 +25,29 @@ import engine.rendering.Renderer;
  * 2. Each frame: update camera from input, then render entities
  */
 public final class RenderSystem implements GameSystem {
-    private static final float CAMERA_HEIGHT = 1.6f;
-    private static final float CAMERA_MOUSE_SENSITIVITY = 0.1f;
+    private static final float CAMERA_YAW = -135.0f;
+    private static final float CAMERA_PITCH = 35.0f;
+    private static final float CAMERA_OFFSET_X = 5.0f;
+    private static final float CAMERA_OFFSET_Y = 6.0f;
+    private static final float CAMERA_OFFSET_Z = 5.0f;
+    private static final float CAMERA_FOLLOW_SPEED = 8.0f;
 
     private final Window window;
     private Renderer renderer;
     private Camera camera;
     private boolean initialized = false;
+    private float lastDeltaSeconds = 1.0f / 60.0f;
+    private float smoothCameraX;
+    private float smoothCameraY;
+    private float smoothCameraZ;
 
     public RenderSystem(Window window) {
         this.window = window;
+    }
+
+    @Override
+    public void update(EcsWorld world, float deltaSeconds) {
+        lastDeltaSeconds = deltaSeconds;
     }
 
     @Override
@@ -59,9 +70,6 @@ public final class RenderSystem implements GameSystem {
         }
 
         try {
-            // Update mouse position each frame
-            window.updateMousePosition();
-
             // Update camera from input
             updateCamera(world);
 
@@ -84,7 +92,7 @@ public final class RenderSystem implements GameSystem {
                         RenderComponent render = world.getComponent(entityId, RenderComponent.class);
                     
                         if (render.visible && render.meshHandle != null) {
-                            float[] color = getEntityColor(world, entityId, render);
+                            float[] color = getEntityColor(render);
                             // Draw the mesh using its transform and render data
                             renderer.drawMeshByHandle(
                                 render.meshHandle,
@@ -113,10 +121,12 @@ public final class RenderSystem implements GameSystem {
         // Create camera
         System.out.println("[RenderSystem] Creating camera...");
         this.camera = new Camera(window.getWidth(), window.getHeight());
-        camera.setPosition(0, 1.6f, 0);
-        // Reset orientation to a known default for debugging
-        camera.setYaw(0.0f);
-        camera.setPitch(0.0f);
+        camera.setYaw(CAMERA_YAW);
+        camera.setPitch(CAMERA_PITCH);
+        camera.setPosition(CAMERA_OFFSET_X, CAMERA_OFFSET_Y, CAMERA_OFFSET_Z);
+        smoothCameraX = CAMERA_OFFSET_X;
+        smoothCameraY = CAMERA_OFFSET_Y;
+        smoothCameraZ = CAMERA_OFFSET_Z;
         System.out.println("[RenderSystem] Camera created: " + window.getWidth() + "x" + window.getHeight());
 
         // Create renderer and initialize
@@ -128,9 +138,8 @@ public final class RenderSystem implements GameSystem {
         renderer.initialize(SimpleShaders.BASIC_VERTEX, SimpleShaders.BASIC_FRAGMENT);
         System.out.println("[RenderSystem] Renderer initialized with shaders!");
 
-        // Enable mouse capture for camera look
-        System.out.println("[RenderSystem] Enabling mouse capture...");
-        window.setMouseCaptured(true);
+        // Keep cursor free for this simple preview camera mode.
+        window.setMouseCaptured(false);
 
         // Pre-create placeholder meshes
         System.out.println("[RenderSystem] Registering meshes...");
@@ -165,35 +174,27 @@ public final class RenderSystem implements GameSystem {
             return;
         }
 
-        float mouseDeltaX = window.getMouseDeltaX();
-        float mouseDeltaY = window.getMouseDeltaY();
-        float cameraYaw = camera.getYaw() + mouseDeltaX * CAMERA_MOUSE_SENSITIVITY;
-        float cameraPitch = camera.getPitch() + mouseDeltaY * CAMERA_MOUSE_SENSITIVITY;
-        float cameraX = playerTransform.position.x;
-        float cameraY = playerTransform.position.y + CAMERA_HEIGHT;
-        float cameraZ = playerTransform.position.z;
+        float desiredX = playerTransform.position.x + CAMERA_OFFSET_X;
+        float desiredY = playerTransform.position.y + CAMERA_OFFSET_Y;
+        float desiredZ = playerTransform.position.z + CAMERA_OFFSET_Z;
 
-        camera.setPosition(cameraX, cameraY, cameraZ);
-        camera.setYaw(cameraYaw);
-        camera.setPitch(cameraPitch);
+        float alpha = Math.min(1.0f, CAMERA_FOLLOW_SPEED * Math.max(0.0f, lastDeltaSeconds));
+        smoothCameraX += (desiredX - smoothCameraX) * alpha;
+        smoothCameraY += (desiredY - smoothCameraY) * alpha;
+        smoothCameraZ += (desiredZ - smoothCameraZ) * alpha;
 
-        // Keep movement orientation in sync with camera look direction.
-        playerTransform.rotation.y = cameraYaw;
+        camera.setPosition(smoothCameraX, smoothCameraY, smoothCameraZ);
+        camera.setYaw(CAMERA_YAW);
+        camera.setPitch(CAMERA_PITCH);
+
+        // Keep movement orientation consistent with the camera's ground-plane direction.
+        playerTransform.rotation.y = CAMERA_YAW;
     }
 
     private void updateHud(EcsWorld world) {
-        String objectiveText = "Objective: collect required products and deliver with F";
+        String objectiveText = "Objective: move with WASD and pick cube with E";
         String inventoryText = "Held: none";
         String interactionText = "Target: none";
-
-        for (int entityId : world.getActiveEntityIds()) {
-            TaskComponent task = world.getComponent(entityId, TaskComponent.class);
-            if (task != null) {
-                int percent = Math.round(task.progress * 100.0f);
-                objectiveText = task.complete ? "Objective complete" : ("Objective: " + percent + "% complete");
-                break;
-            }
-        }
 
         for (int entityId : world.getActiveEntityIds()) {
             InventoryComponent inventory = world.getComponent(entityId, InventoryComponent.class);
@@ -217,34 +218,20 @@ public final class RenderSystem implements GameSystem {
             break;
         }
 
-        window.setTitle("LTU Pasir Ris VIE | " + objectiveText + " | " + inventoryText + " | " + interactionText + " | WASD + mouse");
+        window.setTitle("LTU Pasir Ris VIE | " + objectiveText + " | " + inventoryText + " | " + interactionText);
     }
 
-    private float[] getEntityColor(EcsWorld world, int entityId, RenderComponent render) {
+    private float[] getEntityColor(RenderComponent render) {
         if ("room".equals(render.meshHandle)) {
             return new float[]{0.82f, 0.78f, 0.70f, 1.0f};
         }
         if ("placeholder-shelf".equals(render.meshHandle)) {
             return new float[]{0.55f, 0.35f, 0.22f, 1.0f};
         }
-        if ("placeholder-order-box".equals(render.meshHandle)) {
-            OrderBoxComponent orderBox = world.getComponent(entityId, OrderBoxComponent.class);
-            if (orderBox != null && orderBox.complete) {
-                return new float[]{0.2f, 0.85f, 0.3f, 1.0f};
-            }
-            return new float[]{0.2f, 0.4f, 0.9f, 1.0f};
+        if ("placeholder-player".equals(render.meshHandle)) {
+            return new float[]{0.95f, 0.95f, 0.95f, 1.0f};
         }
         if ("placeholder-product".equals(render.meshHandle)) {
-            ProductComponent product = world.getComponent(entityId, ProductComponent.class);
-            if (product != null && "milk".equals(product.productType)) {
-                return new float[]{0.95f, 0.95f, 1.0f, 1.0f};
-            }
-            if (product != null && "bread".equals(product.productType)) {
-                return new float[]{0.92f, 0.72f, 0.35f, 1.0f};
-            }
-            if (product != null && "juice".equals(product.productType)) {
-                return new float[]{0.95f, 0.52f, 0.12f, 1.0f};
-            }
             return new float[]{0.30f, 0.85f, 0.40f, 1.0f};
         }
         return new float[]{1.0f, 1.0f, 1.0f, 1.0f};
