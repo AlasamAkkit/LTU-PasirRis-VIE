@@ -1,6 +1,6 @@
 package vie.game;
 
-import engine.rendering.Renderer;
+import vie.engine.rendering.Renderer;
 import vie.engine.core.IAppLogic;
 import vie.engine.scene.Entity;
 import vie.engine.scene.Scene;
@@ -47,6 +47,7 @@ public class SupermarketGame implements IAppLogic {
 
     @Override
     public void render() {
+        renderer.render(scene);
     }
 
     @Override

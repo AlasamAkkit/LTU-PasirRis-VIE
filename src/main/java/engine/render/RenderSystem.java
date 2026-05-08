@@ -73,20 +73,22 @@ public final class RenderSystem implements GameSystem {
             renderer.beginFrame();
             renderer.setCamera(camera);
 
+            drawRoomWalls();
+
             // Render all entities with RenderComponent
             int renderableCount = 0;
             for (int entityId : world.getActiveEntityIds()) {
                 if (world.hasComponent(entityId, TransformComponent.class)
                         && world.hasComponent(entityId, RenderComponent.class)) {
                     renderableCount++;
-                    
-                        // Extract components
-                        TransformComponent transform = world.getComponent(entityId, TransformComponent.class);
-                        RenderComponent render = world.getComponent(entityId, RenderComponent.class);
-                    
-                        if (render.visible && render.meshHandle != null) {
-                            drawEntity(world, entityId, transform, render);
-                        }
+
+                    // Extract components
+                    TransformComponent transform = world.getComponent(entityId, TransformComponent.class);
+                    RenderComponent render = world.getComponent(entityId, RenderComponent.class);
+
+                    if (render.visible && render.meshHandle != null) {
+                        drawEntity(world, entityId, transform, render);
+                    }
                 }
             }
 
@@ -191,7 +193,8 @@ public final class RenderSystem implements GameSystem {
             break;
         }
 
-        window.setTitle("LTU Pasir Ris VIE | WASD move | E interact | G drop | " + objectiveText + " | " + inventoryText + " | " + interactionText + " | " + taskText + feedbackText);
+        window.setTitle("LTU Pasir Ris VIE | WASD move | E interact | G drop | " + objectiveText + " | " + inventoryText
+                + " | " + interactionText + " | " + taskText + feedbackText);
     }
 
     private float[] getEntityColor(EcsWorld world, int entityId, RenderComponent render) {
@@ -201,37 +204,37 @@ public final class RenderSystem implements GameSystem {
         }
 
         if ("room".equals(render.meshHandle)) {
-            return new float[]{0.72f, 0.76f, 0.78f, 1.0f};
+            return new float[] { 0.72f, 0.76f, 0.78f, 1.0f };
         }
         if ("placeholder-shelf".equals(render.meshHandle)) {
-            return new float[]{0.55f, 0.35f, 0.22f, 1.0f};
+            return new float[] { 0.55f, 0.35f, 0.22f, 1.0f };
         }
         if ("placeholder-player".equals(render.meshHandle)) {
-            return new float[]{0.95f, 0.95f, 0.95f, 1.0f};
+            return new float[] { 0.95f, 0.95f, 0.95f, 1.0f };
         }
         if ("placeholder-product".equals(render.meshHandle)) {
             ProductComponent product = world.getComponent(entityId, ProductComponent.class);
             if (product != null) {
                 if ("milk".equals(product.productType)) {
-                    return new float[]{0.92f, 0.96f, 1.0f, 1.0f};
+                    return new float[] { 0.92f, 0.96f, 1.0f, 1.0f };
                 }
                 if ("bread".equals(product.productType)) {
-                    return new float[]{0.95f, 0.68f, 0.30f, 1.0f};
+                    return new float[] { 0.95f, 0.68f, 0.30f, 1.0f };
                 }
                 if ("apples".equals(product.productType)) {
-                    return new float[]{0.90f, 0.18f, 0.18f, 1.0f};
+                    return new float[] { 0.90f, 0.18f, 0.18f, 1.0f };
                 }
             }
-            return new float[]{0.30f, 0.85f, 0.40f, 1.0f};
+            return new float[] { 0.30f, 0.85f, 0.40f, 1.0f };
         }
         if ("placeholder-order-box".equals(render.meshHandle)) {
             OrderBoxComponent orderBox = world.getComponent(entityId, OrderBoxComponent.class);
             if (orderBox != null && orderBox.complete) {
-                return new float[]{0.20f, 0.78f, 0.38f, 1.0f};
+                return new float[] { 0.20f, 0.78f, 0.38f, 1.0f };
             }
-            return new float[]{0.25f, 0.50f, 1.0f, 1.0f};
+            return new float[] { 0.25f, 0.50f, 1.0f, 1.0f };
         }
-        return new float[]{1.0f, 1.0f, 1.0f, 1.0f};
+        return new float[] { 1.0f, 1.0f, 1.0f, 1.0f };
     }
 
     private void drawEntity(EcsWorld world, int entityId, TransformComponent transform, RenderComponent render) {
@@ -254,29 +257,29 @@ public final class RenderSystem implements GameSystem {
 
         float[] color = getEntityColor(world, entityId, render);
         drawCube(
-            transform.position.x, transform.position.y, transform.position.z,
-            transform.scale.x, transform.scale.y, transform.scale.z,
-            color
-        );
+                transform.position.x, transform.position.y, transform.position.z,
+                transform.scale.x, transform.scale.y, transform.scale.z,
+                color);
     }
 
     private void drawPlayer(TransformComponent transform) {
         float x = transform.position.x;
         float z = transform.position.z;
-        drawCube(x - 0.16f, 0.28f, z, 0.18f, 0.56f, 0.18f, new float[]{0.12f, 0.13f, 0.16f, 1.0f});
-        drawCube(x + 0.16f, 0.28f, z, 0.18f, 0.56f, 0.18f, new float[]{0.12f, 0.13f, 0.16f, 1.0f});
-        drawCube(x, 0.86f, z, 0.48f, 0.72f, 0.36f, new float[]{0.12f, 0.36f, 0.80f, 1.0f});
-        drawCube(x, 0.86f, z - 0.20f, 0.34f, 0.46f, 0.06f, new float[]{0.95f, 0.95f, 0.88f, 1.0f});
-        drawCube(x - 0.36f, 0.84f, z, 0.14f, 0.55f, 0.14f, new float[]{0.95f, 0.78f, 0.58f, 1.0f});
-        drawCube(x + 0.36f, 0.84f, z, 0.14f, 0.55f, 0.14f, new float[]{0.95f, 0.78f, 0.58f, 1.0f});
-        drawCube(x, 1.34f, z, 0.36f, 0.36f, 0.36f, new float[]{0.95f, 0.78f, 0.58f, 1.0f});
-        drawCube(x, 1.58f, z, 0.42f, 0.12f, 0.42f, new float[]{0.90f, 0.16f, 0.14f, 1.0f});
+        drawCube(x - 0.16f, 0.28f, z, 0.18f, 0.56f, 0.18f, new float[] { 0.12f, 0.13f, 0.16f, 1.0f });
+        drawCube(x + 0.16f, 0.28f, z, 0.18f, 0.56f, 0.18f, new float[] { 0.12f, 0.13f, 0.16f, 1.0f });
+        drawCube(x, 0.86f, z, 0.48f, 0.72f, 0.36f, new float[] { 0.12f, 0.36f, 0.80f, 1.0f });
+        drawCube(x, 0.86f, z - 0.20f, 0.34f, 0.46f, 0.06f, new float[] { 0.95f, 0.95f, 0.88f, 1.0f });
+        drawCube(x - 0.36f, 0.84f, z, 0.14f, 0.55f, 0.14f, new float[] { 0.95f, 0.78f, 0.58f, 1.0f });
+        drawCube(x + 0.36f, 0.84f, z, 0.14f, 0.55f, 0.14f, new float[] { 0.95f, 0.78f, 0.58f, 1.0f });
+        drawCube(x, 1.34f, z, 0.36f, 0.36f, 0.36f, new float[] { 0.95f, 0.78f, 0.58f, 1.0f });
+        drawCube(x, 1.58f, z, 0.42f, 0.12f, 0.42f, new float[] { 0.90f, 0.16f, 0.14f, 1.0f });
     }
 
     private void drawProduct(TransformComponent transform, ProductComponent product) {
         if (product == null || product.productType == null) {
-            float[] color = new float[]{0.30f, 0.85f, 0.40f, 1.0f};
-            drawCube(transform.position.x, transform.position.y, transform.position.z, transform.scale.x, transform.scale.y, transform.scale.z, color);
+            float[] color = new float[] { 0.30f, 0.85f, 0.40f, 1.0f };
+            drawCube(transform.position.x, transform.position.y, transform.position.z, transform.scale.x,
+                    transform.scale.y, transform.scale.z, color);
             return;
         }
 
@@ -285,30 +288,42 @@ public final class RenderSystem implements GameSystem {
         float z = transform.position.z;
 
         if ("milk".equals(product.productType)) {
-            drawCube(x, y, z, transform.scale.x, transform.scale.y, transform.scale.z, new float[]{0.92f, 0.96f, 1.0f, 1.0f});
-            drawCube(x, y + transform.scale.y * 0.48f, z, transform.scale.x * 0.72f, transform.scale.y * 0.20f, transform.scale.z * 0.72f, new float[]{0.45f, 0.76f, 1.0f, 1.0f});
-            drawCube(x, y, z - transform.scale.z * 0.52f, transform.scale.x * 0.70f, transform.scale.y * 0.38f, 0.035f, new float[]{0.12f, 0.38f, 0.85f, 1.0f});
+            drawCube(x, y, z, transform.scale.x, transform.scale.y, transform.scale.z,
+                    new float[] { 0.92f, 0.96f, 1.0f, 1.0f });
+            drawCube(x, y + transform.scale.y * 0.48f, z, transform.scale.x * 0.72f, transform.scale.y * 0.20f,
+                    transform.scale.z * 0.72f, new float[] { 0.45f, 0.76f, 1.0f, 1.0f });
+            drawCube(x, y, z - transform.scale.z * 0.52f, transform.scale.x * 0.70f, transform.scale.y * 0.38f, 0.035f,
+                    new float[] { 0.12f, 0.38f, 0.85f, 1.0f });
             return;
         }
 
         if ("bread".equals(product.productType)) {
-            drawCube(x, y, z, transform.scale.x, transform.scale.y, transform.scale.z, new float[]{0.95f, 0.68f, 0.30f, 1.0f});
-            drawCube(x, y + transform.scale.y * 0.42f, z, transform.scale.x * 0.82f, transform.scale.y * 0.18f, transform.scale.z * 0.82f, new float[]{0.70f, 0.42f, 0.18f, 1.0f});
-            drawCube(x - transform.scale.x * 0.22f, y + transform.scale.y * 0.55f, z, 0.035f, transform.scale.y * 0.20f, transform.scale.z * 0.90f, new float[]{0.55f, 0.32f, 0.12f, 1.0f});
-            drawCube(x + transform.scale.x * 0.22f, y + transform.scale.y * 0.55f, z, 0.035f, transform.scale.y * 0.20f, transform.scale.z * 0.90f, new float[]{0.55f, 0.32f, 0.12f, 1.0f});
+            drawCube(x, y, z, transform.scale.x, transform.scale.y, transform.scale.z,
+                    new float[] { 0.95f, 0.68f, 0.30f, 1.0f });
+            drawCube(x, y + transform.scale.y * 0.42f, z, transform.scale.x * 0.82f, transform.scale.y * 0.18f,
+                    transform.scale.z * 0.82f, new float[] { 0.70f, 0.42f, 0.18f, 1.0f });
+            drawCube(x - transform.scale.x * 0.22f, y + transform.scale.y * 0.55f, z, 0.035f, transform.scale.y * 0.20f,
+                    transform.scale.z * 0.90f, new float[] { 0.55f, 0.32f, 0.12f, 1.0f });
+            drawCube(x + transform.scale.x * 0.22f, y + transform.scale.y * 0.55f, z, 0.035f, transform.scale.y * 0.20f,
+                    transform.scale.z * 0.90f, new float[] { 0.55f, 0.32f, 0.12f, 1.0f });
             return;
         }
 
         if ("apples".equals(product.productType)) {
             float appleSize = Math.max(0.16f, transform.scale.x * 0.55f);
-            drawCube(x - appleSize * 0.55f, y, z, appleSize, appleSize, appleSize, new float[]{0.90f, 0.18f, 0.18f, 1.0f});
-            drawCube(x + appleSize * 0.55f, y, z, appleSize, appleSize, appleSize, new float[]{0.82f, 0.12f, 0.12f, 1.0f});
-            drawCube(x, y + appleSize * 0.42f, z + appleSize * 0.35f, appleSize, appleSize, appleSize, new float[]{0.95f, 0.22f, 0.18f, 1.0f});
-            drawCube(x, y + appleSize * 1.05f, z, appleSize * 0.70f, appleSize * 0.20f, appleSize * 0.45f, new float[]{0.22f, 0.58f, 0.22f, 1.0f});
+            drawCube(x - appleSize * 0.55f, y, z, appleSize, appleSize, appleSize,
+                    new float[] { 0.90f, 0.18f, 0.18f, 1.0f });
+            drawCube(x + appleSize * 0.55f, y, z, appleSize, appleSize, appleSize,
+                    new float[] { 0.82f, 0.12f, 0.12f, 1.0f });
+            drawCube(x, y + appleSize * 0.42f, z + appleSize * 0.35f, appleSize, appleSize, appleSize,
+                    new float[] { 0.95f, 0.22f, 0.18f, 1.0f });
+            drawCube(x, y + appleSize * 1.05f, z, appleSize * 0.70f, appleSize * 0.20f, appleSize * 0.45f,
+                    new float[] { 0.22f, 0.58f, 0.22f, 1.0f });
             return;
         }
 
-        drawCube(x, y, z, transform.scale.x, transform.scale.y, transform.scale.z, new float[]{0.30f, 0.85f, 0.40f, 1.0f});
+        drawCube(x, y, z, transform.scale.x, transform.scale.y, transform.scale.z,
+                new float[] { 0.30f, 0.85f, 0.40f, 1.0f });
     }
 
     private void drawOrderBox(TransformComponent transform, OrderBoxComponent orderBox) {
@@ -318,14 +333,14 @@ public final class RenderSystem implements GameSystem {
         boolean complete = orderBox != null && orderBox.complete;
 
         float[] base = complete
-            ? new float[]{0.20f, 0.78f, 0.38f, 1.0f}
-            : new float[]{0.20f, 0.48f, 0.95f, 1.0f};
+                ? new float[] { 0.20f, 0.78f, 0.38f, 1.0f }
+                : new float[] { 0.20f, 0.48f, 0.95f, 1.0f };
         drawCube(x, y, z, transform.scale.x, transform.scale.y * 0.45f, transform.scale.z, base);
-        drawCube(x, y + 0.32f, z - 0.38f, transform.scale.x, 0.12f, 0.12f, new float[]{0.08f, 0.16f, 0.32f, 1.0f});
-        drawCube(x - 0.45f, y + 0.24f, z, 0.10f, 0.48f, transform.scale.z, new float[]{0.08f, 0.16f, 0.32f, 1.0f});
-        drawCube(x + 0.45f, y + 0.24f, z, 0.10f, 0.48f, transform.scale.z, new float[]{0.08f, 0.16f, 0.32f, 1.0f});
+        drawCube(x, y + 0.32f, z - 0.38f, transform.scale.x, 0.12f, 0.12f, new float[] { 0.08f, 0.16f, 0.32f, 1.0f });
+        drawCube(x - 0.45f, y + 0.24f, z, 0.10f, 0.48f, transform.scale.z, new float[] { 0.08f, 0.16f, 0.32f, 1.0f });
+        drawCube(x + 0.45f, y + 0.24f, z, 0.10f, 0.48f, transform.scale.z, new float[] { 0.08f, 0.16f, 0.32f, 1.0f });
         if (!complete) {
-            drawCube(x, y + 0.62f, z, 0.52f, 0.08f, 0.52f, new float[]{0.92f, 0.96f, 1.0f, 1.0f});
+            drawCube(x, y + 0.62f, z, 0.52f, 0.08f, 0.52f, new float[] { 0.92f, 0.96f, 1.0f, 1.0f });
         }
     }
 
@@ -336,13 +351,16 @@ public final class RenderSystem implements GameSystem {
                 continue;
             }
 
-            TransformComponent target = world.getComponent(input.selectedInteractableEntityId, TransformComponent.class);
+            TransformComponent target = world.getComponent(input.selectedInteractableEntityId,
+                    TransformComponent.class);
             if (target == null) {
                 return;
             }
 
-            drawCube(target.position.x, target.position.y + 1.05f, target.position.z, 0.34f, 0.10f, 0.34f, new float[]{1.0f, 0.95f, 0.10f, 1.0f});
-            drawCube(target.position.x, target.position.y + 1.25f, target.position.z, 0.14f, 0.26f, 0.14f, new float[]{1.0f, 0.95f, 0.10f, 1.0f});
+            drawCube(target.position.x, target.position.y + 1.05f, target.position.z, 0.34f, 0.10f, 0.34f,
+                    new float[] { 1.0f, 0.95f, 0.10f, 1.0f });
+            drawCube(target.position.x, target.position.y + 1.25f, target.position.z, 0.14f, 0.26f, 0.14f,
+                    new float[] { 1.0f, 0.95f, 0.10f, 1.0f });
             return;
         }
     }
@@ -356,13 +374,15 @@ public final class RenderSystem implements GameSystem {
                 continue;
             }
 
-            drawCube(transform.position.x, transform.position.y + 1.05f, transform.position.z, 1.05f, 0.10f, 0.10f, new float[]{0.08f, 0.08f, 0.08f, 1.0f});
+            drawCube(transform.position.x, transform.position.y + 1.05f, transform.position.z, 1.05f, 0.10f, 0.10f,
+                    new float[] { 0.08f, 0.08f, 0.08f, 1.0f });
             float progressWidth = Math.max(0.06f, 1.0f * task.progress);
             float progressX = transform.position.x - 0.5f + progressWidth * 0.5f;
             float[] progressColor = task.complete
-                ? new float[]{0.20f, 0.86f, 0.36f, 1.0f}
-                : new float[]{0.95f, 0.82f, 0.18f, 1.0f};
-            drawCube(progressX, transform.position.y + 1.06f, transform.position.z - 0.01f, progressWidth, 0.12f, 0.12f, progressColor);
+                    ? new float[] { 0.20f, 0.86f, 0.36f, 1.0f }
+                    : new float[] { 0.95f, 0.82f, 0.18f, 1.0f };
+            drawCube(progressX, transform.position.y + 1.06f, transform.position.z - 0.01f, progressWidth, 0.12f, 0.12f,
+                    progressColor);
             return;
         }
     }
@@ -373,37 +393,37 @@ public final class RenderSystem implements GameSystem {
 
     private float[] getMaterialColor(String materialHandle) {
         if ("shelf-back-material".equals(materialHandle)) {
-            return new float[]{0.34f, 0.24f, 0.18f, 1.0f};
+            return new float[] { 0.34f, 0.24f, 0.18f, 1.0f };
         }
         if ("shelf-plank-material".equals(materialHandle)) {
-            return new float[]{0.58f, 0.40f, 0.26f, 1.0f};
+            return new float[] { 0.58f, 0.40f, 0.26f, 1.0f };
         }
         if ("shelf-frame-material".equals(materialHandle)) {
-            return new float[]{0.24f, 0.17f, 0.13f, 1.0f};
+            return new float[] { 0.24f, 0.17f, 0.13f, 1.0f };
         }
         if ("dairy-sign-material".equals(materialHandle)) {
-            return new float[]{0.46f, 0.78f, 1.0f, 1.0f};
+            return new float[] { 0.46f, 0.78f, 1.0f, 1.0f };
         }
         if ("bakery-sign-material".equals(materialHandle)) {
-            return new float[]{1.0f, 0.72f, 0.32f, 1.0f};
+            return new float[] { 1.0f, 0.72f, 0.32f, 1.0f };
         }
         if ("produce-sign-material".equals(materialHandle)) {
-            return new float[]{0.40f, 0.82f, 0.42f, 1.0f};
+            return new float[] { 0.40f, 0.82f, 0.42f, 1.0f };
         }
         if ("generic-sign-material".equals(materialHandle)) {
-            return new float[]{0.82f, 0.82f, 0.82f, 1.0f};
+            return new float[] { 0.82f, 0.82f, 0.82f, 1.0f };
         }
         if ("aisle-floor-material".equals(materialHandle)) {
-            return new float[]{0.63f, 0.66f, 0.68f, 1.0f};
+            return new float[] { 0.63f, 0.66f, 0.68f, 1.0f };
         }
         if ("aisle-line-material".equals(materialHandle)) {
-            return new float[]{0.95f, 0.88f, 0.38f, 1.0f};
+            return new float[] { 0.95f, 0.88f, 0.38f, 1.0f };
         }
         if ("checkout-counter-material".equals(materialHandle)) {
-            return new float[]{0.12f, 0.32f, 0.42f, 1.0f};
+            return new float[] { 0.12f, 0.32f, 0.42f, 1.0f };
         }
         if ("order-zone-material".equals(materialHandle)) {
-            return new float[]{0.16f, 0.38f, 0.78f, 1.0f};
+            return new float[] { 0.16f, 0.38f, 0.78f, 1.0f };
         }
         return null;
     }
@@ -418,5 +438,37 @@ public final class RenderSystem implements GameSystem {
         if (renderer != null) {
             renderer.destroy();
         }
+    }
+
+    private void drawRoomWalls() {
+        // Left wall
+        drawCube(
+                -5.0f, 1.5f, 0.0f,
+                0.2f, 3.0f, 10.0f,
+                new float[] { 0.45f, 0.45f, 0.45f, 1.0f });
+
+        // Right wall
+        drawCube(
+                5.0f, 1.5f, 0.0f,
+                0.2f, 3.0f, 10.0f,
+                new float[] { 0.45f, 0.45f, 0.45f, 1.0f });
+
+        // Top wall
+        drawCube(
+                0.0f, 1.5f, -5.0f,
+                10.0f, 3.0f, 0.2f,
+                new float[] { 0.45f, 0.45f, 0.45f, 1.0f });
+
+        // Bottom wall
+        drawCube(
+                0.0f, 1.5f, 5.0f,
+                10.0f, 3.0f, 0.2f,
+                new float[] { 0.45f, 0.45f, 0.45f, 1.0f });
+
+        // Floor
+        drawCube(
+                0.0f, -0.1f, 0.0f,
+                10.0f, 0.1f, 10.0f,
+                new float[] { 0.30f, 0.30f, 0.30f, 1.0f });
     }
 }
