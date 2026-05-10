@@ -67,8 +67,16 @@ public final class OrderTrackingSystem implements GameSystem {
                     // Increment delivered count for this product type
                     String type = product.productType;
                     int currentCount = order.deliveredItems.getOrDefault(type, 0);
-                    order.deliveredItems.put(type, currentCount + 1);
-                    
+                    int nextCount = currentCount + 1;
+                    order.deliveredItems.put(type, nextCount);
+
+                    int requiredCount = order.currentOrder.getOrDefault(type, 0);
+                    if (nextCount > requiredCount) {
+                        resetOrderProgress(order, orderBox);
+                        lastProcessedItemCount = 0;
+                        return;
+                    }
+
                     logItemDelivered(order, product.productType);
                 }
             }
@@ -86,6 +94,18 @@ public final class OrderTrackingSystem implements GameSystem {
         int required = order.currentOrder.get(productType);
         System.out.println("[OrderTrackingSystem] Delivered " + productType.toUpperCase() 
                          + ": " + delivered + "/" + required);
+        System.out.flush();
+        printOrderStatus(order);
+    }
+
+    private void resetOrderProgress(OrderComponent order, OrderBoxComponent orderBox) {
+        order.resetDelivered();
+        order.orderComplete = false;
+        if (orderBox != null) {
+            orderBox.complete = false;
+            orderBox.receivedItemEntityIds.clear();
+        }
+        System.out.println("[OrderTrackingSystem] Too many items delivered. Order reset.");
         System.out.flush();
         printOrderStatus(order);
     }
