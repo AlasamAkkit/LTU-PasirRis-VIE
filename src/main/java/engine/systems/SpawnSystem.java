@@ -71,6 +71,18 @@ public final class SpawnSystem implements GameSystem {
         return entityId;
     }
 
+    public int spawnShelfProduct(EcsWorld world, String productType, Vector3 position) {
+        int entityId = spawnProduct(world, productType, position);
+        ProductComponent product = world.getComponent(entityId, ProductComponent.class);
+        if (product != null) {
+            product.respawnOnPickup = true;
+            product.respawnX = position.x;
+            product.respawnY = position.y;
+            product.respawnZ = position.z;
+        }
+        return entityId;
+    }
+
     public int spawnOrderBox(EcsWorld world, Vector3 position, java.util.List<String> requiredProductTypes) {
         int entityId = world.createEntity();
         TransformComponent transform = world.addComponent(entityId, new TransformComponent());
@@ -97,7 +109,7 @@ public final class SpawnSystem implements GameSystem {
         }
 
         for (WorldConfig.ProductSpawn productSpawn : config.products) {
-            spawnProduct(world, productSpawn.productType, productSpawn.position);
+            spawnShelfProduct(world, productSpawn.productType, productSpawn.position);
         }
 
         for (WorldConfig.OrderBoxSpawn orderBoxSpawn : config.orderBoxes) {

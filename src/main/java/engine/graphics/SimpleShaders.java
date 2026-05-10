@@ -79,4 +79,42 @@ public class SimpleShaders {
             FragColor = vec4(vColor, 1.0);
         }
         """;
+
+    /**
+     * Vertex shader for 2D text rendering.
+     */
+    public static final String TEXT_VERTEX = """
+        #version 330 core
+
+        layout (location = 0) in vec2 aPosition;
+        layout (location = 1) in vec2 aTexCoord;
+
+        uniform mat4 uProjection;
+
+        out vec2 vTexCoord;
+
+        void main() {
+            vTexCoord = aTexCoord;
+            gl_Position = uProjection * vec4(aPosition, 0.0, 1.0);
+        }
+        """;
+
+    /**
+     * Fragment shader for 2D text rendering.
+     */
+    public static final String TEXT_FRAGMENT = """
+        #version 330 core
+
+        in vec2 vTexCoord;
+
+        uniform sampler2D uFontTexture;
+        uniform vec4 uColor;
+
+        out vec4 FragColor;
+
+        void main() {
+            float alpha = texture(uFontTexture, vTexCoord).r;
+            FragColor = vec4(uColor.rgb, uColor.a * alpha);
+        }
+        """;
 }

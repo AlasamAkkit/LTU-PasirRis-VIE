@@ -8,8 +8,10 @@ import engine.components.RenderComponent;
 import engine.components.TransformComponent;
 import engine.ecs.EcsWorld;
 import engine.ecs.GameSystem;
+import engine.math.Vector3;
 
 public final class InteractionExecutionSystem implements GameSystem {
+    private final SpawnSystem spawnSystem = new SpawnSystem();
     @Override
     public void update(EcsWorld world, float deltaSeconds) {
         for (int entityId : world.getActiveEntityIds()) {
@@ -50,6 +52,12 @@ public final class InteractionExecutionSystem implements GameSystem {
         if (inventory.isFull() || inventory.contains(productEntityId) || !product.availableInWorld) {
             setFeedback(input, "Already carrying an item");
             return;
+        }
+
+        if (product.respawnOnPickup) {
+            Vector3 respawnPosition = new Vector3(product.respawnX, product.respawnY, product.respawnZ);
+            spawnSystem.spawnShelfProduct(world, product.productType, respawnPosition);
+            product.respawnOnPickup = false;
         }
 
         inventory.heldEntityIds.add(productEntityId);

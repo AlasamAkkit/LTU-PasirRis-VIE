@@ -1,5 +1,7 @@
 package engine.render;
 
+import java.io.IOException;
+
 import engine.camera.Camera;
 import engine.components.InputComponent;
 import engine.components.InventoryComponent;
@@ -13,6 +15,7 @@ import engine.ecs.EcsWorld;
 import engine.ecs.GameSystem;
 import engine.graphics.PrimitiveFactory;
 import engine.graphics.SimpleShaders;
+import engine.graphics.TextRenderer;
 import engine.rendering.Renderer;
 
 /**
@@ -33,9 +36,12 @@ public final class RenderSystem implements GameSystem {
     private static final float CAMERA_X = 0.0f;
     private static final float CAMERA_Y = 14.0f;
     private static final float CAMERA_Z = 0.0f;
+    private static final String HUD_FONT_PATH = "assets/fonts/OrderHUD.ttf";
+    private static final int HUD_FONT_SIZE = 24;
 
     private final Window window;
     private Renderer renderer;
+    private TextRenderer textRenderer;
     private Camera camera;
     private boolean initialized = false;
 
@@ -95,6 +101,7 @@ public final class RenderSystem implements GameSystem {
 
             drawInteractionMarker(world);
             drawOrderProgress(world);
+            drawOrderStatusText(world);
 
             // Fallback scene if ECS world has no renderables.
             if (renderableCount == 0) {
@@ -126,6 +133,16 @@ public final class RenderSystem implements GameSystem {
         System.out.println("[RenderSystem] Initializing renderer with shaders...");
         renderer.initialize(SimpleShaders.BASIC_VERTEX, SimpleShaders.BASIC_FRAGMENT);
         System.out.println("[RenderSystem] Renderer initialized with shaders!");
+
+        try {
+            System.out.println("[RenderSystem] Creating text renderer...");
+            this.textRenderer = new TextRenderer(window.getWidth(), window.getHeight(), HUD_FONT_PATH, HUD_FONT_SIZE);
+            System.out.println("[RenderSystem] Text renderer created!");
+        } catch (IOException e) {
+            System.err.println("[RenderSystem] Text renderer init failed: " + e.getMessage());
+            System.err.flush();
+            this.textRenderer = null;
+        }
 
         // Keep cursor free for this simple preview camera mode.
         window.setMouseCaptured(false);
@@ -403,6 +420,55 @@ public final class RenderSystem implements GameSystem {
                     progressColor);
             return;
         }
+    }
+
+    private void drawOrderStatusText(EcsWorld world) {
+        if (textRenderer == null) {
+            return;
+        }
+
+        OrderComponent order = null;
+        for (int entityId : world.getActiveEntityIds()) {
+            order = world.getComponent(entityId, OrderComponent.class);
+            if (order != null) {
+                break;
+            }
+        }
+
+        if (order == null) {
+            return;
+        }
+
+        int breadDel = order.deliveredItems.getOrDefault("bread", 0);
+        int breadReq = order.currentOrder.getOrDefault("bread", 0);
+        int milkDel = order.deliveredItems.getOrDefault("milk", 0);
+        int milkReq = order.currentOrder.getOrDefault("milk", 0);
+        int applesDel = order.deliveredItems.getOrDefault("apples", 0);
+        int applesReq = order.currentOrder.getOrDefault("apples", 0);
+
+        String line1 = "LEVEL " + order.currentLevel;
+        String line2 = "Bread: " + breadDel + "/" + breadReq;
+        String line3 = "Milk: " + milkDel + "/" + milkReq;
+        String line4 = "Apples: " + applesDel + "/" + applesReq;
+
+        float scale = 1.0f;
+        float padding = 16.0f;
+        float lineHeight = textRenderer.getLineHeight(scale);
+
+        float maxWidth = Math.max(
+                Math.max(textRenderer.getTextWidth(line1, scale), textRenderer.getTextWidth(line2, scale)),
+                Math.max(textRenderer.getTextWidth(line3, scale), textRenderer.getTextWidth(line4, scale)));
+
+        float x = Math.max(padding, window.getWidth() - padding - maxWidth);
+        float y = padding;
+
+        textRenderer.drawText(line1, x, y, scale, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
+        y += lineHeight;
+        textRenderer.drawText(line2, x, y, scale, new float[] { 0.95f, 0.68f, 0.30f, 1.0f });
+        y += lineHeight;
+        textRenderer.drawText(line3, x, y, scale, new float[] { 0.92f, 0.96f, 1.0f, 1.0f });
+        y += lineHeight;
+        textRenderer.drawText(line4, x, y, scale, new float[] { 0.90f, 0.18f, 0.18f, 1.0f });
     }
 
     private void drawCube(float x, float y, float z, float scaleX, float scaleY, float scaleZ, float[] color) {
