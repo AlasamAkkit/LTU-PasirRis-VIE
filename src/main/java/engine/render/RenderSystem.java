@@ -4,6 +4,7 @@ import engine.camera.Camera;
 import engine.components.InputComponent;
 import engine.components.InventoryComponent;
 import engine.components.OrderBoxComponent;
+import engine.components.OrderComponent;
 import engine.components.ProductComponent;
 import engine.components.RenderComponent;
 import engine.components.TaskComponent;
@@ -66,7 +67,7 @@ public final class RenderSystem implements GameSystem {
         }
 
         try {
-            updateCamera(world);
+            updateCamera();
             updateHud(world);
 
             // Begin frame and clear
@@ -146,7 +147,7 @@ public final class RenderSystem implements GameSystem {
         System.out.println("[RenderSystem] Registered placeholder mesh aliases");
     }
 
-    private void updateCamera(EcsWorld world) {
+    private void updateCamera() {
         camera.setPosition(CAMERA_X, CAMERA_Y, CAMERA_Z);
         camera.setYaw(CAMERA_YAW);
         camera.setPitch(CAMERA_PITCH);
@@ -158,6 +159,7 @@ public final class RenderSystem implements GameSystem {
         String interactionText = "Target: none";
         String taskText = "Order: pending";
         String feedbackText = "";
+        String orderStatusText = "";
 
         for (int entityId : world.getActiveEntityIds()) {
             InventoryComponent inventory = world.getComponent(entityId, InventoryComponent.class);
@@ -193,8 +195,24 @@ public final class RenderSystem implements GameSystem {
             break;
         }
 
-        window.setTitle("LTU Pasir Ris VIE | WASD move | E interact | G drop | " + objectiveText + " | " + inventoryText
-                + " | " + interactionText + " | " + taskText + feedbackText);
+        // Get order status for display
+        for (int entityId : world.getActiveEntityIds()) {
+            OrderComponent order = world.getComponent(entityId, OrderComponent.class);
+            if (order != null) {
+                int breadDel = order.deliveredItems.getOrDefault("bread", 0);
+                int breadReq = order.currentOrder.getOrDefault("bread", 0);
+                int milkDel = order.deliveredItems.getOrDefault("milk", 0);
+                int milkReq = order.currentOrder.getOrDefault("milk", 0);
+                int applesDel = order.deliveredItems.getOrDefault("apples", 0);
+                int applesReq = order.currentOrder.getOrDefault("apples", 0);
+                orderStatusText = " | LEVEL " + order.currentLevel + " | Bread:" + breadDel + "/" + breadReq
+                        + " Milk:" + milkDel + "/" + milkReq + " Apples:" + applesDel + "/" + applesReq;
+                break;
+            }
+        }
+
+        window.setTitle("LTU Pasir Ris VIE | " + objectiveText + " | " + inventoryText
+                + " | " + interactionText + " | " + taskText + orderStatusText + feedbackText);
     }
 
     private float[] getEntityColor(EcsWorld world, int entityId, RenderComponent render) {

@@ -25,10 +25,14 @@ public final class InteractionExecutionSystem implements GameSystem {
             updateHeldItemVisual(world, inventory, playerTransform);
 
             if (input.dropPressed) {
+                System.out.println("[InteractionExecutionSystem] Drop pressed");
+                System.out.flush();
                 dropHeldItem(world, input, inventory, playerTransform);
             }
 
             if (input.interactPressed && input.selectedInteractableEntityId != -1) {
+                System.out.println("[InteractionExecutionSystem] Interact pressed - targetId: " + input.selectedInteractableEntityId);
+                System.out.flush();
                 int targetEntityId = input.selectedInteractableEntityId;
                 ProductComponent product = world.getComponent(targetEntityId, ProductComponent.class);
                 OrderBoxComponent orderBox = world.getComponent(targetEntityId, OrderBoxComponent.class);
@@ -58,6 +62,7 @@ public final class InteractionExecutionSystem implements GameSystem {
         }
         setFeedback(input, "Picked up " + product.productType);
         System.out.println("[Interaction] Picked up product: " + product.productType);
+        System.out.flush();
     }
 
     private void placeHeldItemIntoOrderBox(EcsWorld world, InputComponent input, InventoryComponent inventory, OrderBoxComponent orderBox) {
@@ -72,12 +77,6 @@ public final class InteractionExecutionSystem implements GameSystem {
             return;
         }
 
-        if (!orderBox.requiredProductTypes.contains(product.productType)) {
-            String requiredProduct = orderBox.requiredProductTypes.isEmpty() ? "another item" : orderBox.requiredProductTypes.get(0);
-            setFeedback(input, "Order wants " + requiredProduct + ", not " + product.productType);
-            return;
-        }
-
         inventory.heldEntityIds.remove(0);
         orderBox.receivedItemEntityIds.add(heldEntityId);
         product.holderEntityId = -1;
@@ -89,6 +88,7 @@ public final class InteractionExecutionSystem implements GameSystem {
         }
         setFeedback(input, "Delivered " + product.productType + " - order complete");
         System.out.println("[Interaction] Placed product into order box: " + product.productType);
+        System.out.flush();
     }
 
     private void dropHeldItem(EcsWorld world, InputComponent input, InventoryComponent inventory, TransformComponent holderTransform) {
@@ -117,6 +117,7 @@ public final class InteractionExecutionSystem implements GameSystem {
         if (product != null) {
             setFeedback(input, "Dropped " + product.productType);
             System.out.println("[Interaction] Dropped product: " + product.productType);
+            System.out.flush();
         }
     }
 

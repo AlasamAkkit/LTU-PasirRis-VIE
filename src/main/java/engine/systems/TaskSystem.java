@@ -1,55 +1,50 @@
 package engine.systems;
 
+import engine.components.OrderComponent;
 import engine.components.OrderBoxComponent;
-import engine.components.ProductComponent;
 import engine.components.TaskComponent;
 import engine.ecs.EcsWorld;
 import engine.ecs.GameSystem;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public final class TaskSystem implements GameSystem {
     @Override
     public void update(EcsWorld world, float deltaSeconds) {
+        OrderComponent order = null;
+        OrderBoxComponent orderBox = null;
+        TaskComponent task = null;
+
         for (int entityId : world.getActiveEntityIds()) {
-            OrderBoxComponent orderBox = world.getComponent(entityId, OrderBoxComponent.class);
-            TaskComponent task = world.getComponent(entityId, TaskComponent.class);
-
-            if (orderBox == null || task == null) {
-                continue;
+            if (order == null) {
+                order = world.getComponent(entityId, OrderComponent.class);
             }
-
-            if (orderBox.requiredProductTypes.isEmpty()) {
-                task.progress = 1.0f;
-                task.complete = true;
-                task.status = "complete";
-                orderBox.complete = true;
-                continue;
+            if (orderBox == null) {
+                orderBox = world.getComponent(entityId, OrderBoxComponent.class);
             }
-
-            Map<String, Integer> receivedCounts = new HashMap<>();
-            for (int receivedEntityId : orderBox.receivedItemEntityIds) {
-                ProductComponent product = world.getComponent(receivedEntityId, ProductComponent.class);
-                if (product == null) {
-                    continue;
-                }
-                receivedCounts.merge(product.productType, 1, Integer::sum);
+            if (task == null) {
+                task = world.getComponent(entityId, TaskComponent.class);
             }
-
-            int satisfiedItems = 0;
-            for (String requiredType : orderBox.requiredProductTypes) {
-                int remaining = receivedCounts.getOrDefault(requiredType, 0);
-                if (remaining > 0) {
-                    receivedCounts.put(requiredType, remaining - 1);
-                    satisfiedItems++;
-                }
+            if (order != null && orderBox != null && task != null) {
+                break;
             }
-
-            task.progress = (float) satisfiedItems / orderBox.requiredProductTypes.size();
-            task.complete = satisfiedItems == orderBox.requiredProductTypes.size();
-            task.status = task.complete ? "complete" : "in-progress";
-            orderBox.complete = task.complete;
         }
+
+        if (order == null || orderBox == null || task == null) {
+            return;
+        }
+
+        int requiredTotal = order.getTotalRequired();
+        if (requiredTotal <= 0) {
+            task.progress = 0.0f;
+            task.complete = false;
+            task.status = "in-progress";
+            orderBox.complete = false;
+            return;
+        }
+
+        int deliveredTotal = order.getTotalDelivered();
+        task.progress = Math.min(1.0f, (float) deliveredTotal / requiredTotal);
+        task.complete = order.isOrderFulfilled();
+        task.status = task.complete ? "complete" : "in-progress";
+        orderBox.complete = task.complete;
     }
 }

@@ -1,0 +1,105 @@
+package engine.systems;
+
+import engine.components.OrderBoxComponent;
+import engine.components.OrderComponent;
+import engine.components.ProductComponent;
+import engine.ecs.EcsWorld;
+import engine.ecs.GameSystem;
+
+/**
+ * OrderTrackingSystem tracks delivered items and updates the OrderComponent.
+ * 
+ * Responsibilities:
+ * - Monitor when products are placed into the order box
+ * - Count delivered items by product type
+ * - Prevent duplicate counting of the same item
+ * - Update the OrderComponent delivered items count
+ * 
+ * Integration:
+ * - Reads from OrderBoxComponent.receivedItemIds (populated by InteractionExecutionSystem)
+ * - Reads from ProductComponent.productType to identify item types
+ * - Updates OrderComponent.deliveredItems count
+ * 
+ * This system is lightweight and only processes items that have been placed in the box.
+ */
+public final class OrderTrackingSystem implements GameSystem {
+    // Track which items we've already counted to prevent duplicates
+    private int lastProcessedItemCount = 0;
+
+    @Override
+    public void update(EcsWorld world, float deltaSeconds) {
+        // Find OrderComponent and OrderBoxComponent
+        OrderComponent order = null;
+        OrderBoxComponent orderBox = null;
+
+        for (int entityId : world.getActiveEntityIds()) {
+            OrderComponent o = world.getComponent(entityId, OrderComponent.class);
+            if (o != null) {
+                order = o;
+            }
+
+            OrderBoxComponent ob = world.getComponent(entityId, OrderBoxComponent.class);
+            if (ob != null) {
+                orderBox = ob;
+            }
+
+            if (order != null && orderBox != null) {
+                break;
+            }
+        }
+
+        if (order == null || orderBox == null) {
+            return;
+        }
+
+        // Check if new items have been added to the order box
+        int currentItemCount = orderBox.receivedItemEntityIds.size();
+        if (currentItemCount < lastProcessedItemCount) {
+            lastProcessedItemCount = currentItemCount;
+        }
+        if (currentItemCount > lastProcessedItemCount) {
+            // New items added - process them
+            for (int i = lastProcessedItemCount; i < currentItemCount; i++) {
+                int itemEntityId = orderBox.receivedItemEntityIds.get(i);
+                ProductComponent product = world.getComponent(itemEntityId, ProductComponent.class);
+                
+                if (product != null && product.productType != null) {
+                    // Increment delivered count for this product type
+                    String type = product.productType;
+                    int currentCount = order.deliveredItems.getOrDefault(type, 0);
+                    order.deliveredItems.put(type, currentCount + 1);
+                    
+                    logItemDelivered(order, product.productType);
+                }
+            }
+            lastProcessedItemCount = currentItemCount;
+        }
+    }
+
+    @Override
+    public void render(EcsWorld world) {
+        // No rendering for order tracking
+    }
+
+    private void logItemDelivered(OrderComponent order, String productType) {
+        int delivered = order.deliveredItems.get(productType);
+        int required = order.currentOrder.get(productType);
+        System.out.println("[OrderTrackingSystem] Delivered " + productType.toUpperCase() 
+                         + ": " + delivered + "/" + required);
+        System.out.flush();
+        printOrderStatus(order);
+    }
+
+    private void printOrderStatus(OrderComponent order) {
+        int breadDel = order.deliveredItems.getOrDefault("bread", 0);
+        int breadReq = order.currentOrder.getOrDefault("bread", 0);
+        int milkDel = order.deliveredItems.getOrDefault("milk", 0);
+        int milkReq = order.currentOrder.getOrDefault("milk", 0);
+        int applesDel = order.deliveredItems.getOrDefault("apples", 0);
+        int applesReq = order.currentOrder.getOrDefault("apples", 0);
+        
+        System.out.println("[ORDER] Level " + order.currentLevel + " - Bread: " + breadDel + "/" + breadReq
+                + " | Milk: " + milkDel + "/" + milkReq + " | Apples: " + applesDel + "/" + applesReq);
+        System.out.flush();
+    }
+}

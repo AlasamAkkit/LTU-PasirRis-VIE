@@ -33,6 +33,10 @@ public final class InputSystem implements GameSystem {
 
             boolean interactKeyDown = window.isKeyPressed(GLFW.GLFW_KEY_E);
             input.interactPressed = interactKeyDown && !previousInteractKeyDown;
+            if (input.interactPressed) {
+                System.out.println("[InputSystem] E key pressed - interactPressed set to true");
+                System.out.flush();
+            }
             previousInteractKeyDown = interactKeyDown;
 
             boolean dropKeyDown = window.isKeyPressed(GLFW.GLFW_KEY_G);
