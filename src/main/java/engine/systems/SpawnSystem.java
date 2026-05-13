@@ -3,6 +3,7 @@ package engine.systems;
 import engine.components.ColliderComponent;
 import engine.components.InputComponent;
 import engine.components.InventoryComponent;
+import engine.components.NavigationObstacleComponent;
 import engine.components.OrderBoxComponent;
 import engine.components.ProductComponent;
 import engine.components.RenderComponent;
@@ -49,6 +50,8 @@ public final class SpawnSystem implements GameSystem {
         ShelfComponent shelf = world.addComponent(entityId, new ShelfComponent());
         shelf.shelfId = shelfId;
         world.addComponent(entityId, new ColliderComponent());
+        NavigationObstacleComponent obstacle = world.addComponent(entityId, new NavigationObstacleComponent());
+        obstacle.halfExtents.set(0.95f, 0.0f, 0.62f);
 
         spawnProp(world, new Vector3(position.x, 0.25f, position.z + 0.18f), new Vector3(1.45f, 0.12f, 0.75f), "shelf-plank-material");
         spawnProp(world, new Vector3(position.x, 0.82f, position.z + 0.18f), new Vector3(1.45f, 0.10f, 0.75f), "shelf-plank-material");
@@ -132,7 +135,9 @@ public final class SpawnSystem implements GameSystem {
         spawnProp(world, new Vector3(0.0f, 0.02f, 0.35f), new Vector3(2.1f, 0.04f, 6.6f), "aisle-floor-material");
         spawnProp(world, new Vector3(-2.65f, 0.025f, 0.35f), new Vector3(0.16f, 0.05f, 6.2f), "aisle-line-material");
         spawnProp(world, new Vector3(2.65f, 0.025f, 0.35f), new Vector3(0.16f, 0.05f, 6.2f), "aisle-line-material");
-        spawnProp(world, new Vector3(0.0f, 0.48f, 3.55f), new Vector3(2.8f, 0.95f, 0.35f), "checkout-counter-material");
+        int checkoutCounter = spawnProp(world, new Vector3(0.0f, 0.48f, 3.55f), new Vector3(2.8f, 0.95f, 0.35f), "checkout-counter-material");
+        NavigationObstacleComponent obstacle = world.addComponent(checkoutCounter, new NavigationObstacleComponent());
+        obstacle.halfExtents.set(1.55f, 0.0f, 0.35f);
         spawnProp(world, new Vector3(0.0f, 0.04f, 2.65f), new Vector3(1.55f, 0.08f, 1.25f), "order-zone-material");
     }
 

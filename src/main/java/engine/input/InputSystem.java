@@ -11,6 +11,7 @@ public final class InputSystem implements GameSystem {
     private final Window window;
     private boolean previousInteractKeyDown;
     private boolean previousDropKeyDown;
+    private final boolean[] previousChoiceKeyDown = new boolean[3];
 
     public InputSystem(Window window) {
         this.window = window;
@@ -42,6 +43,15 @@ public final class InputSystem implements GameSystem {
             boolean dropKeyDown = window.isKeyPressed(GLFW.GLFW_KEY_G);
             input.dropPressed = dropKeyDown && !previousDropKeyDown;
             previousDropKeyDown = dropKeyDown;
+
+            input.dialogueChoicePressedIndex = -1;
+            for (int i = 0; i < previousChoiceKeyDown.length; i++) {
+                boolean choiceKeyDown = window.isKeyPressed(GLFW.GLFW_KEY_1 + i);
+                if (choiceKeyDown && !previousChoiceKeyDown[i]) {
+                    input.dialogueChoicePressedIndex = i;
+                }
+                previousChoiceKeyDown[i] = choiceKeyDown;
+            }
         }
     }
 }

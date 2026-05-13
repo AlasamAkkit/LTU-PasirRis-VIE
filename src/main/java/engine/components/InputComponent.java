@@ -9,6 +9,7 @@ public class InputComponent {
     public boolean moveDown;
     public boolean interactPressed;
     public boolean dropPressed;
+    public int dialogueChoicePressedIndex = -1;
     public boolean canInteract;
     public int selectedInteractableEntityId = -1;
     public String interactionMode = "none";

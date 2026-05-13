@@ -3,6 +3,7 @@ package engine.render;
 import java.io.IOException;
 
 import engine.camera.Camera;
+import engine.components.DialogueChoiceComponent;
 import engine.components.InputComponent;
 import engine.components.InventoryComponent;
 import engine.components.OrderBoxComponent;
@@ -102,6 +103,7 @@ public final class RenderSystem implements GameSystem {
             drawInteractionMarker(world);
             drawOrderProgress(world);
             drawOrderStatusText(world);
+            drawDialogueChoices(world);
 
             // Fallback scene if ECS world has no renderables.
             if (renderableCount == 0) {
@@ -161,6 +163,7 @@ public final class RenderSystem implements GameSystem {
         renderer.registerMesh("placeholder-shelf", renderer.getMesh("cube"));
         renderer.registerMesh("placeholder-product", renderer.getMesh("cube"));
         renderer.registerMesh("placeholder-order-box", renderer.getMesh("cube"));
+        renderer.registerMesh("placeholder-agent", renderer.getMesh("cube"));
         System.out.println("[RenderSystem] Registered placeholder mesh aliases");
     }
 
@@ -247,6 +250,9 @@ public final class RenderSystem implements GameSystem {
         if ("placeholder-player".equals(render.meshHandle)) {
             return new float[] { 0.95f, 0.95f, 0.95f, 1.0f };
         }
+        if ("placeholder-agent".equals(render.meshHandle)) {
+            return new float[] { 0.18f, 0.74f, 0.66f, 1.0f };
+        }
         if ("placeholder-product".equals(render.meshHandle)) {
             ProductComponent product = world.getComponent(entityId, ProductComponent.class);
             if (product != null) {
@@ -275,6 +281,11 @@ public final class RenderSystem implements GameSystem {
     private void drawEntity(EcsWorld world, int entityId, TransformComponent transform, RenderComponent render) {
         if ("placeholder-player".equals(render.meshHandle)) {
             drawPlayer(transform);
+            return;
+        }
+
+        if ("placeholder-agent".equals(render.meshHandle)) {
+            drawAssistant(transform);
             return;
         }
 
@@ -308,6 +319,19 @@ public final class RenderSystem implements GameSystem {
         drawCube(x + 0.36f, 0.84f, z, 0.14f, 0.55f, 0.14f, new float[] { 0.95f, 0.78f, 0.58f, 1.0f });
         drawCube(x, 1.34f, z, 0.36f, 0.36f, 0.36f, new float[] { 0.95f, 0.78f, 0.58f, 1.0f });
         drawCube(x, 1.58f, z, 0.42f, 0.12f, 0.42f, new float[] { 0.90f, 0.16f, 0.14f, 1.0f });
+    }
+
+    private void drawAssistant(TransformComponent transform) {
+        float x = transform.position.x;
+        float z = transform.position.z;
+        drawCube(x - 0.16f, 0.28f, z, 0.18f, 0.56f, 0.18f, new float[] { 0.10f, 0.16f, 0.18f, 1.0f });
+        drawCube(x + 0.16f, 0.28f, z, 0.18f, 0.56f, 0.18f, new float[] { 0.10f, 0.16f, 0.18f, 1.0f });
+        drawCube(x, 0.86f, z, 0.48f, 0.72f, 0.36f, new float[] { 0.18f, 0.74f, 0.66f, 1.0f });
+        drawCube(x, 0.86f, z - 0.20f, 0.34f, 0.46f, 0.06f, new float[] { 0.95f, 0.98f, 0.94f, 1.0f });
+        drawCube(x - 0.36f, 0.84f, z, 0.14f, 0.55f, 0.14f, new float[] { 0.82f, 0.66f, 0.48f, 1.0f });
+        drawCube(x + 0.36f, 0.84f, z, 0.14f, 0.55f, 0.14f, new float[] { 0.82f, 0.66f, 0.48f, 1.0f });
+        drawCube(x, 1.34f, z, 0.36f, 0.36f, 0.36f, new float[] { 0.82f, 0.66f, 0.48f, 1.0f });
+        drawCube(x, 1.57f, z, 0.44f, 0.12f, 0.44f, new float[] { 0.04f, 0.20f, 0.18f, 1.0f });
     }
 
     private void drawProduct(TransformComponent transform, ProductComponent product) {
@@ -469,6 +493,42 @@ public final class RenderSystem implements GameSystem {
         textRenderer.drawText(line3, x, y, scale, new float[] { 0.92f, 0.96f, 1.0f, 1.0f });
         y += lineHeight;
         textRenderer.drawText(line4, x, y, scale, new float[] { 0.90f, 0.18f, 0.18f, 1.0f });
+    }
+
+    private void drawDialogueChoices(EcsWorld world) {
+        if (textRenderer == null) {
+            return;
+        }
+
+        DialogueChoiceComponent dialogue = null;
+        for (int entityId : world.getActiveEntityIds()) {
+            DialogueChoiceComponent candidate = world.getComponent(entityId, DialogueChoiceComponent.class);
+            if (candidate != null && candidate.visible) {
+                dialogue = candidate;
+                break;
+            }
+        }
+
+        if (dialogue == null) {
+            return;
+        }
+
+        float scale = 1.0f;
+        float lineHeight = textRenderer.getLineHeight(scale);
+        float maxWidth = textRenderer.getTextWidth(dialogue.title, scale);
+        for (String choiceLabel : dialogue.choiceLabels) {
+            maxWidth = Math.max(maxWidth, textRenderer.getTextWidth(choiceLabel, scale));
+        }
+
+        float x = Math.max(16.0f, (window.getWidth() - maxWidth) * 0.5f);
+        float y = Math.max(16.0f, window.getHeight() - lineHeight * (dialogue.choiceLabels.length + 2) - 28.0f);
+
+        textRenderer.drawText(dialogue.title, x, y, scale, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
+        y += lineHeight;
+        for (String choiceLabel : dialogue.choiceLabels) {
+            textRenderer.drawText(choiceLabel, x, y, scale, new float[] { 0.84f, 1.0f, 0.92f, 1.0f });
+            y += lineHeight;
+        }
     }
 
     private void drawCube(float x, float y, float z, float scaleX, float scaleY, float scaleZ, float[] color) {
