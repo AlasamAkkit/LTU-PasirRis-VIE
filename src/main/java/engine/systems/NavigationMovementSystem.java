@@ -19,11 +19,13 @@ public final class NavigationMovementSystem implements GameSystem {
                 continue;
             }
             if (!navigation.hasDestination || !navigation.pathAvailable) {
+                velocity.velocity.set(0.0f, 0.0f, 0.0f);
                 continue;
             }
             if (navigation.currentWaypointIndex >= navigation.path.size()) {
                 navigation.reachedDestination = true;
                 navigation.hasDestination = false;
+                velocity.velocity.set(0.0f, 0.0f, 0.0f);
                 continue;
             }
 
@@ -40,15 +42,19 @@ public final class NavigationMovementSystem implements GameSystem {
                     transform.position.z = waypoint.z;
                     navigation.reachedDestination = true;
                     navigation.hasDestination = false;
+                    velocity.velocity.set(0.0f, 0.0f, 0.0f);
                 }
                 continue;
             }
 
             float distance = (float) Math.sqrt(distanceSquared);
             float step = Math.min(distance, velocity.speed * deltaSeconds);
-            transform.position.x += (deltaX / distance) * step;
+            float moveX = (deltaX / distance) * step;
+            float moveZ = (deltaZ / distance) * step;
+            transform.position.x += moveX;
             transform.position.y = 0.0f;
-            transform.position.z += (deltaZ / distance) * step;
+            transform.position.z += moveZ;
+            velocity.velocity.set((deltaX / distance) * velocity.speed, 0.0f, (deltaZ / distance) * velocity.speed);
             navigation.reachedDestination = false;
         }
     }

@@ -19,7 +19,8 @@ import game.config.WorldConfig;
 public final class SpawnSystem implements GameSystem {
     @Override
     public void update(EcsWorld world, float deltaSeconds) {
-        // Intentionally empty for now. This system exists as the home for config-driven spawn passes.
+        // Intentionally empty for now. This system exists as the home for config-driven
+        // spawn passes.
     }
 
     public int spawnPlayer(EcsWorld world, Vector3 position) {
@@ -28,7 +29,9 @@ public final class SpawnSystem implements GameSystem {
         transform.position.set(position);
         transform.scale.set(0.55f, 1.0f, 0.55f);
         world.addComponent(entityId, new RenderComponent("placeholder-player", "placeholder-player-material"));
-        world.addComponent(entityId, new ColliderComponent());
+        ColliderComponent collider = world.addComponent(entityId, new ColliderComponent());
+        collider.halfExtents.set(0.275f, 0.5f, 0.275f);
+        collider.trigger = false;
         VelocityComponent velocity = world.addComponent(entityId, new VelocityComponent());
         velocity.speed = 3.0f;
         world.addComponent(entityId, new InputComponent());
@@ -49,16 +52,25 @@ public final class SpawnSystem implements GameSystem {
         int entityId = spawnProp(world, position, new Vector3(1.35f, 1.7f, 0.12f), "shelf-back-material");
         ShelfComponent shelf = world.addComponent(entityId, new ShelfComponent());
         shelf.shelfId = shelfId;
-        world.addComponent(entityId, new ColliderComponent());
+        ColliderComponent collider = world.addComponent(entityId, new ColliderComponent());
+        collider.trigger = false;
+        collider.halfExtents.set(0.8f, 0.85f, 0.4f);
+        collider.offset.set(0.0f, 0.0f, 0.09f);
         NavigationObstacleComponent obstacle = world.addComponent(entityId, new NavigationObstacleComponent());
         obstacle.halfExtents.set(0.95f, 0.0f, 0.62f);
 
-        spawnProp(world, new Vector3(position.x, 0.25f, position.z + 0.18f), new Vector3(1.45f, 0.12f, 0.75f), "shelf-plank-material");
-        spawnProp(world, new Vector3(position.x, 0.82f, position.z + 0.18f), new Vector3(1.45f, 0.10f, 0.75f), "shelf-plank-material");
-        spawnProp(world, new Vector3(position.x, 1.38f, position.z + 0.18f), new Vector3(1.45f, 0.10f, 0.75f), "shelf-plank-material");
-        spawnProp(world, new Vector3(position.x - 0.75f, 0.85f, position.z + 0.18f), new Vector3(0.12f, 1.75f, 0.75f), "shelf-frame-material");
-        spawnProp(world, new Vector3(position.x + 0.75f, 0.85f, position.z + 0.18f), new Vector3(0.12f, 1.75f, 0.75f), "shelf-frame-material");
-        spawnProp(world, new Vector3(position.x, 1.98f, position.z + 0.35f), new Vector3(1.55f, 0.28f, 0.10f), signMaterialForShelf(shelfId));
+        spawnProp(world, new Vector3(position.x, 0.25f, position.z + 0.18f), new Vector3(1.45f, 0.12f, 0.75f),
+                "shelf-plank-material");
+        spawnProp(world, new Vector3(position.x, 0.82f, position.z + 0.18f), new Vector3(1.45f, 0.10f, 0.75f),
+                "shelf-plank-material");
+        spawnProp(world, new Vector3(position.x, 1.38f, position.z + 0.18f), new Vector3(1.45f, 0.10f, 0.75f),
+                "shelf-plank-material");
+        spawnProp(world, new Vector3(position.x - 0.75f, 0.85f, position.z + 0.18f), new Vector3(0.12f, 1.75f, 0.75f),
+                "shelf-frame-material");
+        spawnProp(world, new Vector3(position.x + 0.75f, 0.85f, position.z + 0.18f), new Vector3(0.12f, 1.75f, 0.75f),
+                "shelf-frame-material");
+        spawnProp(world, new Vector3(position.x, 1.98f, position.z + 0.35f), new Vector3(1.55f, 0.28f, 0.10f),
+                signMaterialForShelf(shelfId));
         return entityId;
     }
 
@@ -135,7 +147,8 @@ public final class SpawnSystem implements GameSystem {
         spawnProp(world, new Vector3(0.0f, 0.02f, 0.35f), new Vector3(2.1f, 0.04f, 6.6f), "aisle-floor-material");
         spawnProp(world, new Vector3(-2.65f, 0.025f, 0.35f), new Vector3(0.16f, 0.05f, 6.2f), "aisle-line-material");
         spawnProp(world, new Vector3(2.65f, 0.025f, 0.35f), new Vector3(0.16f, 0.05f, 6.2f), "aisle-line-material");
-        int checkoutCounter = spawnProp(world, new Vector3(0.0f, 0.48f, 3.55f), new Vector3(2.8f, 0.95f, 0.35f), "checkout-counter-material");
+        int checkoutCounter = spawnProp(world, new Vector3(0.0f, 0.48f, 3.55f), new Vector3(2.8f, 0.95f, 0.35f),
+                "checkout-counter-material");
         NavigationObstacleComponent obstacle = world.addComponent(checkoutCounter, new NavigationObstacleComponent());
         obstacle.halfExtents.set(1.55f, 0.0f, 0.35f);
         spawnProp(world, new Vector3(0.0f, 0.04f, 2.65f), new Vector3(1.55f, 0.08f, 1.25f), "order-zone-material");

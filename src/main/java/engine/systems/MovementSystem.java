@@ -5,6 +5,7 @@ import engine.components.TransformComponent;
 import engine.components.VelocityComponent;
 import engine.ecs.EcsWorld;
 import engine.ecs.GameSystem;
+
 public final class MovementSystem implements GameSystem {
     private static final float MIN_X = -4.6f;
     private static final float MAX_X = 4.6f;
@@ -43,10 +44,14 @@ public final class MovementSystem implements GameSystem {
                 float inverseLength = 1.0f / (float) Math.sqrt(lengthSquared);
                 directionX *= inverseLength;
                 directionZ *= inverseLength;
-                transform.position.add(directionX * velocity.speed * deltaSeconds, 0.0f, directionZ * velocity.speed * deltaSeconds);
+                velocity.velocity.set(directionX * velocity.speed, 0.0f, directionZ * velocity.speed);
+                transform.position.add(directionX * velocity.speed * deltaSeconds, 0.0f,
+                        directionZ * velocity.speed * deltaSeconds);
                 transform.position.x = clamp(transform.position.x, MIN_X, MAX_X);
                 transform.position.y = 0.0f;
                 transform.position.z = clamp(transform.position.z, MIN_Z, MAX_Z);
+            } else {
+                velocity.velocity.set(0.0f, 0.0f, 0.0f);
             }
         }
     }

@@ -6,6 +6,7 @@ import engine.core.Scene;
 import engine.ecs.EcsWorld;
 import engine.input.InputSystem;
 import engine.math.Vector3;
+import engine.physics.PhysicsSystem;
 import engine.render.RenderSystem;
 import engine.render.Window;
 import engine.systems.CarriedItemSystem;
@@ -58,14 +59,16 @@ public final class SupermarketScene implements Scene {
         // Register game systems in update order
         world.registerSystem(new InputSystem(window));
         world.registerSystem(new MovementSystem());
+        world.registerSystem(new PhysicsSystem());
         world.registerSystem(new InteractionDetectionSystem());
         world.registerSystem(new DialogueInteractionSystem());
         world.registerSystem(new InteractionExecutionSystem());
         world.registerSystem(new AssistantAgentSystem());
         world.registerSystem(new NavigationPathSystem());
         world.registerSystem(new NavigationMovementSystem());
+        world.registerSystem(new PhysicsSystem());
         world.registerSystem(new CarriedItemSystem());
-        
+
         // Order management systems (game-specific supermarket logic)
         OrderGenerationSystem orderGenSystem = new OrderGenerationSystem();
         world.registerSystem(orderGenSystem);
@@ -73,7 +76,7 @@ public final class SupermarketScene implements Scene {
         world.registerSystem(new TaskSystem());
         world.registerSystem(new OrderCompletionSystem(orderGenSystem));
         world.registerSystem(new OrderUISystem(window));
-        
+
         // Render system (must be last for rendering)
         world.registerSystem(new RenderSystem(window));
 
@@ -82,7 +85,7 @@ public final class SupermarketScene implements Scene {
         createNavigationGrid(world);
         spawnSystem.spawnWorld(world, DemoWorldFactory.createDefaultConfig());
         AssistantAgentFactory.spawnAssistant(world, new Vector3(-4.1f, 0.0f, 3.8f));
-        
+
         // Create the OrderComponent entity (singleton-like)
         createOrderEntity(world);
     }
