@@ -2,6 +2,7 @@ package engine.systems;
 
 import engine.components.InputComponent;
 import engine.components.InventoryComponent;
+import engine.components.MessComponent;
 import engine.components.OrderBoxComponent;
 import engine.components.ProductComponent;
 import engine.components.RenderComponent;
@@ -9,9 +10,20 @@ import engine.components.TransformComponent;
 import engine.ecs.EcsWorld;
 import engine.ecs.GameSystem;
 import engine.math.Vector3;
+import game.config.WorldConfig;
+import game.content.MessFactory;
+
+import java.util.Random;
 
 public final class InteractionExecutionSystem implements GameSystem {
     private final SpawnSystem spawnSystem = new SpawnSystem();
+    private final WorldConfig.MessRules messRules;
+    private final Random random = new Random();
+
+    public InteractionExecutionSystem(WorldConfig.MessRules messRules) {
+        this.messRules = messRules;
+    }
+
     @Override
     public void update(EcsWorld world, float deltaSeconds) {
         for (int entityId : world.getActiveEntityIds()) {
@@ -38,11 +50,14 @@ public final class InteractionExecutionSystem implements GameSystem {
                 int targetEntityId = input.selectedInteractableEntityId;
                 ProductComponent product = world.getComponent(targetEntityId, ProductComponent.class);
                 OrderBoxComponent orderBox = world.getComponent(targetEntityId, OrderBoxComponent.class);
+                MessComponent mess = world.getComponent(targetEntityId, MessComponent.class);
 
                 if (product != null) {
                     pickUpProduct(world, input, entityId, targetEntityId, inventory, product);
                 } else if (orderBox != null) {
                     placeHeldItemIntoOrderBox(world, input, inventory, orderBox);
+                } else if (mess != null) {
+                    startCleaningMess(world, input, entityId, mess);
                 }
             }
         }
@@ -52,6 +67,11 @@ public final class InteractionExecutionSystem implements GameSystem {
         if (inventory.isFull() || inventory.contains(productEntityId) || !product.availableInWorld) {
             setFeedback(input, "Already carrying an item");
             return;
+        }
+
+        TransformComponent productTransform = world.getComponent(productEntityId, TransformComponent.class);
+        if (productTransform != null) {
+            MessFactory.maybeSpawnOnProductPickup(world, spawnSystem, messRules, random, productTransform.position);
         }
 
         if (product.respawnOnPickup) {
@@ -154,5 +174,15 @@ public final class InteractionExecutionSystem implements GameSystem {
     private void setFeedback(InputComponent input, String message) {
         input.feedbackMessage = message;
         input.feedbackSecondsRemaining = 2.5f;
+    }
+
+    private void startCleaningMess(EcsWorld world, InputComponent input, int cleanerEntityId, MessComponent mess) {
+        if (mess.cleanerEntityId != -1 && mess.cleanerEntityId != cleanerEntityId) {
+            setFeedback(input, "Someone is already cleaning this mess");
+            return;
+        }
+        mess.cleanerEntityId = cleanerEntityId;
+        mess.cleaningProgressSeconds = 0.0f;
+        setFeedback(input, "Cleaning mess...");
     }
 }

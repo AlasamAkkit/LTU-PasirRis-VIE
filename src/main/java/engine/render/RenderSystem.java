@@ -225,8 +225,10 @@ public final class RenderSystem implements GameSystem {
                 int milkReq = order.currentOrder.getOrDefault("milk", 0);
                 int applesDel = order.deliveredItems.getOrDefault("apples", 0);
                 int applesReq = order.currentOrder.getOrDefault("apples", 0);
+                int timeRemaining = (int) Math.ceil(order.timeRemainingSeconds);
                 orderStatusText = " | LEVEL " + order.currentLevel + " | Bread:" + breadDel + "/" + breadReq
-                        + " Milk:" + milkDel + "/" + milkReq + " Apples:" + applesDel + "/" + applesReq;
+                        + " Milk:" + milkDel + "/" + milkReq + " Apples:" + applesDel + "/" + applesReq
+                        + " Time:" + timeRemaining + "s";
                 break;
             }
         }
@@ -416,12 +418,26 @@ public final class RenderSystem implements GameSystem {
                 return;
             }
 
+            float[] markerColor = interactionMarkerColor(input.interactionMode);
             drawCube(target.position.x, target.position.y + 1.05f, target.position.z, 0.34f, 0.10f, 0.34f,
-                    new float[] { 1.0f, 0.95f, 0.10f, 1.0f });
+                    markerColor);
             drawCube(target.position.x, target.position.y + 1.25f, target.position.z, 0.14f, 0.26f, 0.14f,
-                    new float[] { 1.0f, 0.95f, 0.10f, 1.0f });
+                    markerColor);
             return;
         }
+    }
+
+    private float[] interactionMarkerColor(String interactionMode) {
+        if ("clean".equals(interactionMode)) {
+            return new float[] { 0.10f, 0.95f, 1.0f, 1.0f };
+        }
+        if ("place".equals(interactionMode)) {
+            return new float[] { 0.25f, 0.55f, 1.0f, 1.0f };
+        }
+        if ("talk".equals(interactionMode)) {
+            return new float[] { 0.34f, 1.0f, 0.66f, 1.0f };
+        }
+        return new float[] { 1.0f, 0.95f, 0.10f, 1.0f };
     }
 
     private void drawOrderProgress(EcsWorld world) {
@@ -469,11 +485,13 @@ public final class RenderSystem implements GameSystem {
         int milkReq = order.currentOrder.getOrDefault("milk", 0);
         int applesDel = order.deliveredItems.getOrDefault("apples", 0);
         int applesReq = order.currentOrder.getOrDefault("apples", 0);
+        int timeRemaining = (int) Math.ceil(order.timeRemainingSeconds);
 
         String line1 = "LEVEL " + order.currentLevel;
-        String line2 = "Bread: " + breadDel + "/" + breadReq;
-        String line3 = "Milk: " + milkDel + "/" + milkReq;
-        String line4 = "Apples: " + applesDel + "/" + applesReq;
+        String line2 = "Time: " + timeRemaining + "s";
+        String line3 = "Bread: " + breadDel + "/" + breadReq;
+        String line4 = "Milk: " + milkDel + "/" + milkReq;
+        String line5 = "Apples: " + applesDel + "/" + applesReq;
 
         float scale = 1.0f;
         float padding = 16.0f;
@@ -481,18 +499,22 @@ public final class RenderSystem implements GameSystem {
 
         float maxWidth = Math.max(
                 Math.max(textRenderer.getTextWidth(line1, scale), textRenderer.getTextWidth(line2, scale)),
-                Math.max(textRenderer.getTextWidth(line3, scale), textRenderer.getTextWidth(line4, scale)));
+                Math.max(
+                        Math.max(textRenderer.getTextWidth(line3, scale), textRenderer.getTextWidth(line4, scale)),
+                        textRenderer.getTextWidth(line5, scale)));
 
         float x = Math.max(padding, window.getWidth() - padding - maxWidth);
         float y = padding;
 
         textRenderer.drawText(line1, x, y, scale, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
         y += lineHeight;
-        textRenderer.drawText(line2, x, y, scale, new float[] { 0.95f, 0.68f, 0.30f, 1.0f });
+        textRenderer.drawText(line2, x, y, scale, new float[] { 1.0f, 0.92f, 0.40f, 1.0f });
         y += lineHeight;
-        textRenderer.drawText(line3, x, y, scale, new float[] { 0.92f, 0.96f, 1.0f, 1.0f });
+        textRenderer.drawText(line3, x, y, scale, new float[] { 0.95f, 0.68f, 0.30f, 1.0f });
         y += lineHeight;
-        textRenderer.drawText(line4, x, y, scale, new float[] { 0.90f, 0.18f, 0.18f, 1.0f });
+        textRenderer.drawText(line4, x, y, scale, new float[] { 0.92f, 0.96f, 1.0f, 1.0f });
+        y += lineHeight;
+        textRenderer.drawText(line5, x, y, scale, new float[] { 0.90f, 0.18f, 0.18f, 1.0f });
     }
 
     private void drawDialogueChoices(EcsWorld world) {
@@ -568,6 +590,9 @@ public final class RenderSystem implements GameSystem {
         }
         if ("order-zone-material".equals(materialHandle)) {
             return new float[] { 0.16f, 0.38f, 0.78f, 1.0f };
+        }
+        if ("mess-material".equals(materialHandle)) {
+            return new float[] { 0.44f, 0.25f, 0.10f, 1.0f };
         }
         return null;
     }

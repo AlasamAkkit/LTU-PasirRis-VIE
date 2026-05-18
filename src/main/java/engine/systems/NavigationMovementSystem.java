@@ -48,13 +48,14 @@ public final class NavigationMovementSystem implements GameSystem {
             }
 
             float distance = (float) Math.sqrt(distanceSquared);
-            float step = Math.min(distance, velocity.speed * deltaSeconds);
+            float effectiveSpeed = velocity.speed * MessSystem.speedMultiplierAt(world, transform.position);
+            float step = Math.min(distance, effectiveSpeed * deltaSeconds);
             float moveX = (deltaX / distance) * step;
             float moveZ = (deltaZ / distance) * step;
             transform.position.x += moveX;
             transform.position.y = 0.0f;
             transform.position.z += moveZ;
-            velocity.velocity.set((deltaX / distance) * velocity.speed, 0.0f, (deltaZ / distance) * velocity.speed);
+            velocity.velocity.set((deltaX / distance) * effectiveSpeed, 0.0f, (deltaZ / distance) * effectiveSpeed);
             navigation.reachedDestination = false;
         }
     }

@@ -29,6 +29,7 @@ public final class OrderUISystem implements GameSystem {
     private int lastBreadDelivered = -1;
     private int lastMilkDelivered = -1;
     private int lastApplesDelivered = -1;
+    private int lastDisplayedTimeRemaining = -1;
 
     public OrderUISystem(Window window) {
         this.window = window;
@@ -48,6 +49,7 @@ public final class OrderUISystem implements GameSystem {
         int breadDelivered = order.deliveredItems.getOrDefault("bread", 0);
         int milkDelivered = order.deliveredItems.getOrDefault("milk", 0);
         int applesDelivered = order.deliveredItems.getOrDefault("apples", 0);
+        int timeRemaining = (int) Math.ceil(order.timeRemainingSeconds);
 
         if (order.currentLevel != lastLevel
                 || breadRequired != lastBreadRequired
@@ -55,9 +57,10 @@ public final class OrderUISystem implements GameSystem {
                 || applesRequired != lastApplesRequired
                 || breadDelivered != lastBreadDelivered
                 || milkDelivered != lastMilkDelivered
-                || applesDelivered != lastApplesDelivered) {
+                || applesDelivered != lastApplesDelivered
+                || timeRemaining != lastDisplayedTimeRemaining) {
             cachedOrderText = buildOrderText(order.currentLevel, breadDelivered, breadRequired, milkDelivered,
-                    milkRequired, applesDelivered, applesRequired);
+                    milkRequired, applesDelivered, applesRequired, timeRemaining);
             lastLevel = order.currentLevel;
             lastBreadRequired = breadRequired;
             lastMilkRequired = milkRequired;
@@ -65,6 +68,7 @@ public final class OrderUISystem implements GameSystem {
             lastBreadDelivered = breadDelivered;
             lastMilkDelivered = milkDelivered;
             lastApplesDelivered = applesDelivered;
+            lastDisplayedTimeRemaining = timeRemaining;
             
             // Print order state to console for debugging
             logOrderState(order.currentLevel, breadDelivered, breadRequired, milkDelivered,
@@ -133,9 +137,10 @@ public final class OrderUISystem implements GameSystem {
     }
 
     private String buildOrderText(int level, int breadDelivered, int breadRequired, int milkDelivered,
-            int milkRequired, int applesDelivered, int applesRequired) {
+            int milkRequired, int applesDelivered, int applesRequired, int timeRemaining) {
         return new StringBuilder(96)
                 .append("Level ").append(level).append(" Order:\n")
+                .append("Time: ").append(timeRemaining).append("s\n")
                 .append("Bread: ").append(breadDelivered).append('/').append(breadRequired).append('\n')
                 .append("Milk: ").append(milkDelivered).append('/').append(milkRequired).append('\n')
                 .append("Apples: ").append(applesDelivered).append('/').append(applesRequired)

@@ -25,6 +25,8 @@ public final class OrderComponent {
     
     // Flag to indicate order is complete (used by UI system)
     public boolean orderComplete = false;
+    public float timeLimitSeconds;
+    public float timeRemainingSeconds;
 
     public OrderComponent() {
         // Initialize with empty order - will be populated by OrderGenerationSystem

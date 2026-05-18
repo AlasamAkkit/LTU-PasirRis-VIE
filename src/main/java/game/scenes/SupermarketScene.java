@@ -14,16 +14,19 @@ import engine.systems.DialogueInteractionSystem;
 import engine.systems.InteractionDetectionSystem;
 import engine.systems.InteractionExecutionSystem;
 import engine.systems.MovementSystem;
+import engine.systems.MessSystem;
 import engine.systems.NavigationMovementSystem;
 import engine.systems.NavigationPathSystem;
 import engine.systems.OrderCompletionSystem;
 import engine.systems.OrderGenerationSystem;
+import engine.systems.OrderTimerSystem;
 import engine.systems.OrderTrackingSystem;
 import engine.systems.OrderUISystem;
 import engine.systems.SpawnSystem;
 import engine.systems.TaskSystem;
 import game.content.AssistantAgentFactory;
 import game.content.DemoWorldFactory;
+import game.config.WorldConfig;
 import game.systems.AssistantAgentSystem;
 
 /**
@@ -55,6 +58,7 @@ public final class SupermarketScene implements Scene {
     @Override
     public void load(EcsWorld world, Window window) {
         SpawnSystem spawnSystem = new SpawnSystem();
+        WorldConfig worldConfig = DemoWorldFactory.createDefaultConfig();
 
         // Register game systems in update order
         world.registerSystem(new InputSystem(window));
@@ -62,17 +66,19 @@ public final class SupermarketScene implements Scene {
         world.registerSystem(new PhysicsSystem());
         world.registerSystem(new InteractionDetectionSystem());
         world.registerSystem(new DialogueInteractionSystem());
-        world.registerSystem(new InteractionExecutionSystem());
-        world.registerSystem(new AssistantAgentSystem());
+        world.registerSystem(new InteractionExecutionSystem(worldConfig.messRules));
+        world.registerSystem(new AssistantAgentSystem(worldConfig.messRules));
         world.registerSystem(new NavigationPathSystem());
         world.registerSystem(new NavigationMovementSystem());
         world.registerSystem(new PhysicsSystem());
         world.registerSystem(new CarriedItemSystem());
+        world.registerSystem(new MessSystem());
 
         // Order management systems (game-specific supermarket logic)
-        OrderGenerationSystem orderGenSystem = new OrderGenerationSystem();
+        OrderGenerationSystem orderGenSystem = new OrderGenerationSystem(worldConfig.orderRules);
         world.registerSystem(orderGenSystem);
         world.registerSystem(new OrderTrackingSystem());
+        world.registerSystem(new OrderTimerSystem(worldConfig.orderRules, orderGenSystem));
         world.registerSystem(new TaskSystem());
         world.registerSystem(new OrderCompletionSystem(orderGenSystem));
         world.registerSystem(new OrderUISystem(window));
@@ -83,8 +89,10 @@ public final class SupermarketScene implements Scene {
         // Spawn initial world using configuration
         spawnSystem.spawnRoom(world, new Vector3(0.0f, 0.0f, 0.0f), new Vector3(1.0f, 1.0f, 1.0f));
         createNavigationGrid(world);
-        spawnSystem.spawnWorld(world, DemoWorldFactory.createDefaultConfig());
-        AssistantAgentFactory.spawnAssistant(world, new Vector3(-4.1f, 0.0f, 3.8f));
+        spawnSystem.spawnWorld(world, worldConfig);
+        if (worldConfig.assistant.spawnOnStart) {
+            AssistantAgentFactory.spawnAssistant(world, worldConfig.assistant);
+        }
 
         // Create the OrderComponent entity (singleton-like)
         createOrderEntity(world);

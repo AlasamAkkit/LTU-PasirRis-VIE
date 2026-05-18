@@ -11,12 +11,17 @@ import engine.components.VelocityComponent;
 import engine.ecs.EcsWorld;
 import engine.math.Vector3;
 import game.components.AssistantAgentComponent;
+import game.config.WorldConfig;
 
 public final class AssistantAgentFactory {
     private AssistantAgentFactory() {
     }
 
-    public static int spawnAssistant(EcsWorld world, Vector3 position) {
+    public static int spawnAssistant(EcsWorld world, WorldConfig.AssistantSpawn spawn) {
+        return spawnAssistant(world, spawn.position, spawn.moveSpeed);
+    }
+
+    public static int spawnAssistant(EcsWorld world, Vector3 position, float moveSpeed) {
         int entityId = world.createEntity();
 
         TransformComponent transform = world.addComponent(entityId, new TransformComponent());
@@ -38,7 +43,7 @@ public final class AssistantAgentFactory {
         dialogue.choiceValues = new String[] { "bread", "milk", "apples" };
 
         VelocityComponent velocity = world.addComponent(entityId, new VelocityComponent());
-        velocity.speed = 2.25f;
+        velocity.speed = moveSpeed;
 
         world.addComponent(entityId, new InventoryComponent());
         world.addComponent(entityId, new NavigationAgentComponent());

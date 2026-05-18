@@ -7,6 +7,7 @@ import engine.components.OrderComponent;
 import engine.components.TaskComponent;
 import engine.ecs.EcsWorld;
 import engine.ecs.GameSystem;
+import game.config.WorldConfig;
 
 /**
  * OrderGenerationSystem generates new orders based on the current level.
@@ -22,9 +23,14 @@ import engine.ecs.GameSystem;
  */
 public final class OrderGenerationSystem implements GameSystem {
     private final Random random = new Random();
+    private final WorldConfig.OrderRules orderRules;
     private boolean hasGeneratedInitialOrder = false;
     private int cachedOrderEntityId = -1;
     private int cachedOrderBoxEntityId = -1;
+
+    public OrderGenerationSystem(WorldConfig.OrderRules orderRules) {
+        this.orderRules = orderRules;
+    }
 
     @Override
     public void update(EcsWorld world, float deltaSeconds) {
@@ -60,6 +66,8 @@ public final class OrderGenerationSystem implements GameSystem {
         // Reset delivered items for new order
         order.resetDelivered();
         order.orderComplete = false;
+        order.timeLimitSeconds = orderRules.timeLimitForLevel(order.currentLevel);
+        order.timeRemainingSeconds = order.timeLimitSeconds;
 
         OrderBoxComponent orderBox = getCachedOrderBox(world);
         if (orderBox != null) {

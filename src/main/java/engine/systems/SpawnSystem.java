@@ -3,6 +3,8 @@ package engine.systems;
 import engine.components.ColliderComponent;
 import engine.components.InputComponent;
 import engine.components.InventoryComponent;
+import engine.components.InteractableComponent;
+import engine.components.MessComponent;
 import engine.components.NavigationObstacleComponent;
 import engine.components.OrderBoxComponent;
 import engine.components.ProductComponent;
@@ -16,6 +18,9 @@ import engine.ecs.GameSystem;
 import engine.math.Vector3;
 import game.config.WorldConfig;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public final class SpawnSystem implements GameSystem {
     @Override
     public void update(EcsWorld world, float deltaSeconds) {
@@ -23,7 +28,7 @@ public final class SpawnSystem implements GameSystem {
         // spawn passes.
     }
 
-    public int spawnPlayer(EcsWorld world, Vector3 position) {
+    public int spawnPlayer(EcsWorld world, Vector3 position, float moveSpeed) {
         int entityId = world.createEntity();
         TransformComponent transform = world.addComponent(entityId, new TransformComponent());
         transform.position.set(position);
@@ -33,7 +38,7 @@ public final class SpawnSystem implements GameSystem {
         collider.halfExtents.set(0.275f, 0.5f, 0.275f);
         collider.trigger = false;
         VelocityComponent velocity = world.addComponent(entityId, new VelocityComponent());
-        velocity.speed = 3.0f;
+        velocity.speed = moveSpeed;
         world.addComponent(entityId, new InputComponent());
         world.addComponent(entityId, new InventoryComponent());
         return entityId;
@@ -87,10 +92,14 @@ public final class SpawnSystem implements GameSystem {
     }
 
     public int spawnShelfProduct(EcsWorld world, String productType, Vector3 position) {
+        return spawnShelfProduct(world, productType, position, true);
+    }
+
+    public int spawnShelfProduct(EcsWorld world, String productType, Vector3 position, boolean respawnOnPickup) {
         int entityId = spawnProduct(world, productType, position);
         ProductComponent product = world.getComponent(entityId, ProductComponent.class);
         if (product != null) {
-            product.respawnOnPickup = true;
+            product.respawnOnPickup = respawnOnPickup;
             product.respawnX = position.x;
             product.respawnY = position.y;
             product.respawnZ = position.z;
@@ -98,7 +107,7 @@ public final class SpawnSystem implements GameSystem {
         return entityId;
     }
 
-    public int spawnOrderBox(EcsWorld world, Vector3 position, java.util.List<String> requiredProductTypes) {
+    public int spawnOrderBox(EcsWorld world, Vector3 position) {
         int entityId = world.createEntity();
         TransformComponent transform = world.addComponent(entityId, new TransformComponent());
         transform.position.set(position);
@@ -106,32 +115,85 @@ public final class SpawnSystem implements GameSystem {
         world.addComponent(entityId, new RenderComponent("placeholder-order-box", "placeholder-order-box-material"));
         ColliderComponent collider = world.addComponent(entityId, new ColliderComponent());
         collider.interactionRadius = 1.4f;
-        OrderBoxComponent orderBox = world.addComponent(entityId, new OrderBoxComponent());
-        for (String requiredProductType : requiredProductTypes) {
-            orderBox.requiredProductTypes.add(requiredProductType);
-        }
+        world.addComponent(entityId, new OrderBoxComponent());
         TaskComponent task = world.addComponent(entityId, new TaskComponent());
         task.currentTaskId = "fulfil-order";
         task.status = "in-progress";
         return entityId;
     }
 
+    public int spawnMess(EcsWorld world, Vector3 position, float radius, float speedMultiplier, float durationSeconds,
+            float cleaningDurationSeconds) {
+        int entityId = world.createEntity();
+        TransformComponent transform = world.addComponent(entityId, new TransformComponent());
+        transform.position.set(position.x, 0.03f, position.z);
+        transform.scale.set(radius * 2.0f, 0.04f, radius * 2.0f);
+        world.addComponent(entityId, new RenderComponent("cube", "mess-material"));
+        ColliderComponent collider = world.addComponent(entityId, new ColliderComponent());
+        collider.interactionRadius = radius;
+
+        InteractableComponent interactable = world.addComponent(entityId, new InteractableComponent());
+        interactable.prompt = "Clean mess";
+        interactable.interactionMode = "clean";
+
+        MessComponent mess = world.addComponent(entityId, new MessComponent());
+        mess.radius = radius;
+        mess.speedMultiplier = speedMultiplier;
+        mess.remainingSeconds = durationSeconds;
+        mess.expires = durationSeconds > 0.0f;
+        mess.cleaningDurationSeconds = cleaningDurationSeconds;
+        return entityId;
+    }
+
     public void spawnWorld(EcsWorld world, WorldConfig config) {
-        spawnPlayer(world, config.player.position);
+        Map<String, WorldConfig.ShelfSpawn> shelvesById = indexShelves(config);
+
+        if (config.player.spawnOnStart) {
+            spawnPlayer(world, config.player.position, config.player.moveSpeed);
+        }
 
         for (WorldConfig.ShelfSpawn shelfSpawn : config.shelves) {
-            spawnShelf(world, shelfSpawn.id, shelfSpawn.position);
+            if (shelfSpawn.spawnOnStart) {
+                spawnShelf(world, shelfSpawn.id, shelfSpawn.position);
+            }
         }
 
         for (WorldConfig.ProductSpawn productSpawn : config.products) {
-            spawnShelfProduct(world, productSpawn.productType, productSpawn.position);
+            if (productSpawn.spawnOnStart) {
+                Vector3 position = resolveProductPosition(productSpawn, shelvesById);
+                spawnShelfProduct(world, productSpawn.productType, position,
+                        productSpawn.respawnOnPickup);
+            }
         }
 
         for (WorldConfig.OrderBoxSpawn orderBoxSpawn : config.orderBoxes) {
-            spawnOrderBox(world, orderBoxSpawn.position, orderBoxSpawn.requiredProductTypes);
+            if (orderBoxSpawn.spawnOnStart) {
+                spawnOrderBox(world, orderBoxSpawn.position);
+            }
         }
 
         spawnStoreDecoration(world);
+    }
+
+    private Map<String, WorldConfig.ShelfSpawn> indexShelves(WorldConfig config) {
+        Map<String, WorldConfig.ShelfSpawn> shelvesById = new HashMap<>();
+        for (WorldConfig.ShelfSpawn shelf : config.shelves) {
+            shelvesById.put(shelf.id, shelf);
+        }
+        return shelvesById;
+    }
+
+    private Vector3 resolveProductPosition(WorldConfig.ProductSpawn productSpawn,
+            Map<String, WorldConfig.ShelfSpawn> shelvesById) {
+        if (productSpawn.shelfId != null && !productSpawn.shelfId.isBlank()) {
+            WorldConfig.ShelfSpawn shelf = shelvesById.get(productSpawn.shelfId);
+            Vector3 offset = productSpawn.offsetFromShelf;
+            return new Vector3(
+                    shelf.position.x + offset.x,
+                    shelf.position.y + offset.y,
+                    shelf.position.z + offset.z);
+        }
+        return productSpawn.position.copy();
     }
 
     public int spawnProp(EcsWorld world, Vector3 position, Vector3 scale, String materialHandle) {
