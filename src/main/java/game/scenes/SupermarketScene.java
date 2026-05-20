@@ -1,11 +1,10 @@
 package game.scenes;
 
-import engine.components.OrderComponent;
-import engine.components.NavigationGridComponent;
+import engine.components.InputComponent;
+import engine.components.ThemeSelectionComponent;
 import engine.core.Scene;
 import engine.ecs.EcsWorld;
 import engine.input.InputSystem;
-import engine.math.Vector3;
 import engine.physics.PhysicsSystem;
 import engine.render.RenderSystem;
 import engine.render.Window;
@@ -24,9 +23,10 @@ import engine.systems.OrderTrackingSystem;
 import engine.systems.OrderUISystem;
 import engine.systems.SpawnSystem;
 import engine.systems.TaskSystem;
-import game.content.AssistantAgentFactory;
 import game.content.DemoWorldFactory;
 import game.config.WorldConfig;
+import game.systems.InteractionPromptSystem;
+import game.systems.ThemeSelectionSystem;
 import game.systems.AssistantAgentSystem;
 
 /**
@@ -60,8 +60,11 @@ public final class SupermarketScene implements Scene {
         SpawnSystem spawnSystem = new SpawnSystem();
         WorldConfig worldConfig = DemoWorldFactory.createDefaultConfig();
 
+        createThemeSelectionEntity(world);
+
         // Register game systems in update order
         world.registerSystem(new InputSystem(window));
+        world.registerSystem(new ThemeSelectionSystem(spawnSystem, worldConfig));
         world.registerSystem(new MovementSystem());
         world.registerSystem(new PhysicsSystem());
         world.registerSystem(new InteractionDetectionSystem());
@@ -73,6 +76,7 @@ public final class SupermarketScene implements Scene {
         world.registerSystem(new PhysicsSystem());
         world.registerSystem(new CarriedItemSystem());
         world.registerSystem(new MessSystem());
+        world.registerSystem(new InteractionPromptSystem());
 
         // Order management systems (game-specific supermarket logic)
         OrderGenerationSystem orderGenSystem = new OrderGenerationSystem(worldConfig.orderRules);
@@ -86,16 +90,7 @@ public final class SupermarketScene implements Scene {
         // Render system (must be last for rendering)
         world.registerSystem(new RenderSystem(window));
 
-        // Spawn initial world using configuration
-        spawnSystem.spawnRoom(world, new Vector3(0.0f, 0.0f, 0.0f), new Vector3(1.0f, 1.0f, 1.0f));
-        createNavigationGrid(world);
-        spawnSystem.spawnWorld(world, worldConfig);
-        if (worldConfig.assistant.spawnOnStart) {
-            AssistantAgentFactory.spawnAssistant(world, worldConfig.assistant);
-        }
-
-        // Create the OrderComponent entity (singleton-like)
-        createOrderEntity(world);
+        // Gameplay world is spawned after the player chooses a theme.
     }
 
     /**
@@ -105,18 +100,9 @@ public final class SupermarketScene implements Scene {
      * ECS Design: This is a game-specific data entity that holds order state.
      * Pure data component - updated by order management systems.
      */
-    private void createOrderEntity(EcsWorld world) {
-        int orderEntityId = world.createEntity();
-        world.addComponent(orderEntityId, new OrderComponent());
-    }
-
-    private void createNavigationGrid(EcsWorld world) {
-        int navigationEntityId = world.createEntity();
-        NavigationGridComponent grid = world.addComponent(navigationEntityId, new NavigationGridComponent());
-        grid.minX = -4.6f;
-        grid.maxX = 4.6f;
-        grid.minZ = -4.4f;
-        grid.maxZ = 4.4f;
-        grid.cellSize = 0.4f;
+    private void createThemeSelectionEntity(EcsWorld world) {
+        int entityId = world.createEntity();
+        world.addComponent(entityId, new InputComponent());
+        world.addComponent(entityId, new ThemeSelectionComponent());
     }
 }

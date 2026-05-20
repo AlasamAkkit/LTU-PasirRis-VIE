@@ -6,10 +6,12 @@ import engine.camera.Camera;
 import engine.components.DialogueChoiceComponent;
 import engine.components.InputComponent;
 import engine.components.InventoryComponent;
+import engine.components.InteractionPromptComponent;
 import engine.components.OrderBoxComponent;
 import engine.components.OrderComponent;
 import engine.components.ProductComponent;
 import engine.components.RenderComponent;
+import engine.components.ThemeSelectionComponent;
 import engine.components.TaskComponent;
 import engine.components.TransformComponent;
 import engine.ecs.EcsWorld;
@@ -76,12 +78,19 @@ public final class RenderSystem implements GameSystem {
         try {
             updateCamera();
             updateHud(world);
+            boolean themeSelectionActive = isThemeSelectionActive(world);
 
             // Begin frame and clear
             renderer.beginFrame();
             renderer.setCamera(camera);
 
-            drawRoomWalls();
+            drawRoomWalls(world);
+
+            if (themeSelectionActive) {
+                drawThemeSelectionPrompt(world);
+                renderer.endFrame();
+                return;
+            }
 
             // Render all entities with RenderComponent
             int renderableCount = 0;
@@ -101,6 +110,7 @@ public final class RenderSystem implements GameSystem {
             }
 
             drawInteractionMarker(world);
+            drawInteractionPrompt(world);
             drawOrderProgress(world);
             drawOrderStatusText(world);
             drawDialogueChoices(world);
@@ -282,7 +292,7 @@ public final class RenderSystem implements GameSystem {
 
     private void drawEntity(EcsWorld world, int entityId, TransformComponent transform, RenderComponent render) {
         if ("placeholder-player".equals(render.meshHandle)) {
-            drawPlayer(transform);
+            drawPlayer(world, transform);
             return;
         }
 
@@ -310,12 +320,13 @@ public final class RenderSystem implements GameSystem {
                 color);
     }
 
-    private void drawPlayer(TransformComponent transform) {
+    private void drawPlayer(EcsWorld world, TransformComponent transform) {
+        float[] shirtColor = getPlayerShirtColor(world);
         float x = transform.position.x;
         float z = transform.position.z;
         drawCube(x - 0.16f, 0.28f, z, 0.18f, 0.56f, 0.18f, new float[] { 0.12f, 0.13f, 0.16f, 1.0f });
         drawCube(x + 0.16f, 0.28f, z, 0.18f, 0.56f, 0.18f, new float[] { 0.12f, 0.13f, 0.16f, 1.0f });
-        drawCube(x, 0.86f, z, 0.48f, 0.72f, 0.36f, new float[] { 0.12f, 0.36f, 0.80f, 1.0f });
+        drawCube(x, 0.86f, z, 0.48f, 0.72f, 0.36f, shirtColor);
         drawCube(x, 0.86f, z - 0.20f, 0.34f, 0.46f, 0.06f, new float[] { 0.95f, 0.95f, 0.88f, 1.0f });
         drawCube(x - 0.36f, 0.84f, z, 0.14f, 0.55f, 0.14f, new float[] { 0.95f, 0.78f, 0.58f, 1.0f });
         drawCube(x + 0.36f, 0.84f, z, 0.14f, 0.55f, 0.14f, new float[] { 0.95f, 0.78f, 0.58f, 1.0f });
@@ -517,6 +528,35 @@ public final class RenderSystem implements GameSystem {
         textRenderer.drawText(line5, x, y, scale, new float[] { 0.90f, 0.18f, 0.18f, 1.0f });
     }
 
+    private void drawInteractionPrompt(EcsWorld world) {
+        if (textRenderer == null) {
+            return;
+        }
+
+        InteractionPromptComponent prompt = null;
+        for (int entityId : world.getActiveEntityIds()) {
+            InteractionPromptComponent candidate = world.getComponent(entityId, InteractionPromptComponent.class);
+            if (candidate != null && candidate.visible) {
+                prompt = candidate;
+                break;
+            }
+        }
+
+        if (prompt == null) {
+            return;
+        }
+
+        float x = 16.0f;
+        float y = 140.0f;
+        float scale = 1.0f;
+        float[] titleColor = new float[] { 0.98f, 0.86f, 0.32f, 1.0f };
+        float[] bodyColor = new float[] { 0.96f, 0.96f, 0.96f, 1.0f };
+
+        textRenderer.drawText(prompt.title, x, y, scale, titleColor);
+        y += textRenderer.getLineHeight(scale) * 1.15f;
+        textRenderer.drawText(prompt.body, x, y, scale, bodyColor);
+    }
+
     private void drawDialogueChoices(EcsWorld world) {
         if (textRenderer == null) {
             return;
@@ -609,7 +649,9 @@ public final class RenderSystem implements GameSystem {
         }
     }
 
-    private void drawRoomWalls() {
+    private void drawRoomWalls(EcsWorld world) {
+        float[] floorColor = getThemeFloorColor(world);
+
         // Left wall
         drawCube(
                 -5.0f, 1.5f, 0.0f,
@@ -638,6 +680,61 @@ public final class RenderSystem implements GameSystem {
         drawCube(
                 0.0f, -0.1f, 0.0f,
                 10.0f, 0.1f, 10.0f,
-                new float[] { 0.30f, 0.30f, 0.30f, 1.0f });
+                floorColor);
+    }
+
+    private boolean isThemeSelectionActive(EcsWorld world) {
+        for (int entityId : world.getActiveEntityIds()) {
+            ThemeSelectionComponent theme = world.getComponent(entityId, ThemeSelectionComponent.class);
+            if (theme != null && !theme.complete) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private ThemeSelectionComponent findThemeSelection(EcsWorld world) {
+        for (int entityId : world.getActiveEntityIds()) {
+            ThemeSelectionComponent theme = world.getComponent(entityId, ThemeSelectionComponent.class);
+            if (theme != null) {
+                return theme;
+            }
+        }
+        return null;
+    }
+
+    private float[] getThemeFloorColor(EcsWorld world) {
+        ThemeSelectionComponent theme = findThemeSelection(world);
+        if (theme != null) {
+            return theme.floorColor;
+        }
+        return new float[] { 0.30f, 0.30f, 0.30f, 1.0f };
+    }
+
+    private float[] getPlayerShirtColor(EcsWorld world) {
+        ThemeSelectionComponent theme = world != null ? findThemeSelection(world) : null;
+        if (theme != null) {
+            return theme.shirtColor;
+        }
+        return new float[] { 0.12f, 0.36f, 0.80f, 1.0f };
+    }
+
+    private void drawThemeSelectionPrompt(EcsWorld world) {
+        if (textRenderer == null) {
+            return;
+        }
+
+        ThemeSelectionComponent theme = findThemeSelection(world);
+        if (theme == null) {
+            return;
+        }
+
+        float x = 16.0f;
+        float y = 140.0f;
+        float scale = 1.0f;
+
+        textRenderer.drawText(theme.title, x, y, scale, new float[] { 0.98f, 0.86f, 0.32f, 1.0f });
+        y += textRenderer.getLineHeight(scale) * 1.15f;
+        textRenderer.drawText(theme.body, x, y, scale, new float[] { 0.96f, 0.96f, 0.96f, 1.0f });
     }
 }
