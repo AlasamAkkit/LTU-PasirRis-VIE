@@ -13,15 +13,25 @@ import engine.math.Vector3;
 import game.components.AssistantAgentComponent;
 import game.config.WorldConfig;
 
+import java.util.List;
+
 public final class AssistantAgentFactory {
     private AssistantAgentFactory() {
     }
 
     public static int spawnAssistant(EcsWorld world, WorldConfig.AssistantSpawn spawn) {
-        return spawnAssistant(world, spawn.position, spawn.moveSpeed);
+        return spawnAssistant(world, spawn.position, spawn.moveSpeed, List.of("bread", "milk", "apples"));
+    }
+
+    public static int spawnAssistant(EcsWorld world, WorldConfig.AssistantSpawn spawn, List<String> productTypes) {
+        return spawnAssistant(world, spawn.position, spawn.moveSpeed, productTypes);
     }
 
     public static int spawnAssistant(EcsWorld world, Vector3 position, float moveSpeed) {
+        return spawnAssistant(world, position, moveSpeed, List.of("bread", "milk", "apples"));
+    }
+
+    public static int spawnAssistant(EcsWorld world, Vector3 position, float moveSpeed, List<String> productTypes) {
         int entityId = world.createEntity();
 
         TransformComponent transform = world.addComponent(entityId, new TransformComponent());
@@ -39,8 +49,8 @@ public final class AssistantAgentFactory {
 
         DialogueChoiceComponent dialogue = world.addComponent(entityId, new DialogueChoiceComponent());
         dialogue.title = "Assistant: what should I deliver?";
-        dialogue.choiceLabels = new String[] { "1 Bread", "2 Milk", "3 Apples" };
-        dialogue.choiceValues = new String[] { "bread", "milk", "apples" };
+        dialogue.choiceLabels = buildChoiceLabels(productTypes);
+        dialogue.choiceValues = productTypes.toArray(new String[0]);
 
         VelocityComponent velocity = world.addComponent(entityId, new VelocityComponent());
         velocity.speed = moveSpeed;
@@ -50,6 +60,22 @@ public final class AssistantAgentFactory {
 
         AssistantAgentComponent assistant = world.addComponent(entityId, new AssistantAgentComponent());
         assistant.homePosition.set(position);
+        assistant.productChoices = productTypes.toArray(new String[0]);
         return entityId;
+    }
+
+    private static String[] buildChoiceLabels(List<String> productTypes) {
+        String[] labels = new String[productTypes.size()];
+        for (int index = 0; index < productTypes.size(); index++) {
+            labels[index] = (index + 1) + " " + capitalize(productTypes.get(index));
+        }
+        return labels;
+    }
+
+    private static String capitalize(String value) {
+        if (value == null || value.isEmpty()) {
+            return "";
+        }
+        return value.substring(0, 1).toUpperCase() + value.substring(1);
     }
 }

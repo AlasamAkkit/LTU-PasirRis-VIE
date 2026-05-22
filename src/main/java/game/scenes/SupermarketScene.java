@@ -23,11 +23,12 @@ import engine.systems.OrderTrackingSystem;
 import engine.systems.OrderUISystem;
 import engine.systems.SpawnSystem;
 import engine.systems.TaskSystem;
-import game.content.DemoWorldFactory;
 import game.config.WorldConfig;
 import game.systems.InteractionPromptSystem;
 import game.systems.ThemeSelectionSystem;
 import game.systems.AssistantAgentSystem;
+
+import java.util.Objects;
 
 /**
  * SupermarketScene orchestrates the game scene initialization.
@@ -55,17 +56,26 @@ import game.systems.AssistantAgentSystem;
  * 15. RenderSystem - renders all graphics
  */
 public final class SupermarketScene implements Scene {
+    private final WorldConfig worldConfig;
+
+    public SupermarketScene(WorldConfig worldConfig) {
+        this.worldConfig = Objects.requireNonNull(worldConfig, "worldConfig");
+    }
+
     @Override
     public void load(EcsWorld world, Window window) {
         SpawnSystem spawnSystem = new SpawnSystem();
-        WorldConfig worldConfig = DemoWorldFactory.createDefaultConfig();
 
         createThemeSelectionEntity(world);
 
         // Register game systems in update order
         world.registerSystem(new InputSystem(window));
         world.registerSystem(new ThemeSelectionSystem(spawnSystem, worldConfig));
-        world.registerSystem(new MovementSystem());
+        world.registerSystem(new MovementSystem(
+                worldConfig.map.minX(),
+                worldConfig.map.maxX(),
+                worldConfig.map.minZ(),
+                worldConfig.map.maxZ()));
         world.registerSystem(new PhysicsSystem());
         world.registerSystem(new InteractionDetectionSystem());
         world.registerSystem(new DialogueInteractionSystem());
@@ -88,7 +98,11 @@ public final class SupermarketScene implements Scene {
         world.registerSystem(new OrderUISystem(window));
 
         // Render system (must be last for rendering)
-        world.registerSystem(new RenderSystem(window));
+        world.registerSystem(new RenderSystem(
+                window,
+                worldConfig.map.width,
+                worldConfig.map.depth,
+                worldConfig.map.wallHeight));
 
         // Gameplay world is spawned after the player chooses a theme.
     }

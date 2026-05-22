@@ -7,10 +7,25 @@ import engine.ecs.EcsWorld;
 import engine.ecs.GameSystem;
 
 public final class MovementSystem implements GameSystem {
-    private static final float MIN_X = -4.6f;
-    private static final float MAX_X = 4.6f;
-    private static final float MIN_Z = -4.4f;
-    private static final float MAX_Z = 4.4f;
+    private static final float DEFAULT_MIN_X = -4.6f;
+    private static final float DEFAULT_MAX_X = 4.6f;
+    private static final float DEFAULT_MIN_Z = -4.4f;
+    private static final float DEFAULT_MAX_Z = 4.4f;
+    private final float minX;
+    private final float maxX;
+    private final float minZ;
+    private final float maxZ;
+
+    public MovementSystem() {
+        this(DEFAULT_MIN_X, DEFAULT_MAX_X, DEFAULT_MIN_Z, DEFAULT_MAX_Z);
+    }
+
+    public MovementSystem(float minX, float maxX, float minZ, float maxZ) {
+        this.minX = minX;
+        this.maxX = maxX;
+        this.minZ = minZ;
+        this.maxZ = maxZ;
+    }
 
     @Override
     public void update(EcsWorld world, float deltaSeconds) {
@@ -48,9 +63,9 @@ public final class MovementSystem implements GameSystem {
                 velocity.velocity.set(directionX * effectiveSpeed, 0.0f, directionZ * effectiveSpeed);
                 transform.position.add(directionX * effectiveSpeed * deltaSeconds, 0.0f,
                         directionZ * effectiveSpeed * deltaSeconds);
-                transform.position.x = clamp(transform.position.x, MIN_X, MAX_X);
+                transform.position.x = clamp(transform.position.x, minX, maxX);
                 transform.position.y = 0.0f;
-                transform.position.z = clamp(transform.position.z, MIN_Z, MAX_Z);
+                transform.position.z = clamp(transform.position.z, minZ, maxZ);
             } else {
                 velocity.velocity.set(0.0f, 0.0f, 0.0f);
             }

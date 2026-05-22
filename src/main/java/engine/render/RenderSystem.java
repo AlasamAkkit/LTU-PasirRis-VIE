@@ -37,19 +37,31 @@ public final class RenderSystem implements GameSystem {
     private static final float CAMERA_YAW = 0.0f;
     private static final float CAMERA_PITCH = 90.0f;
     private static final float CAMERA_X = 0.0f;
-    private static final float CAMERA_Y = 14.0f;
+    private static final float DEFAULT_CAMERA_Y = 14.0f;
     private static final float CAMERA_Z = 0.0f;
     private static final String HUD_FONT_PATH = "assets/fonts/OrderHUD.ttf";
     private static final int HUD_FONT_SIZE = 24;
 
     private final Window window;
+    private final float mapWidth;
+    private final float mapDepth;
+    private final float wallHeight;
+    private final float cameraY;
     private Renderer renderer;
     private TextRenderer textRenderer;
     private Camera camera;
     private boolean initialized = false;
 
     public RenderSystem(Window window) {
+        this(window, 10.0f, 10.0f, 3.0f);
+    }
+
+    public RenderSystem(Window window, float mapWidth, float mapDepth, float wallHeight) {
         this.window = window;
+        this.mapWidth = mapWidth;
+        this.mapDepth = mapDepth;
+        this.wallHeight = wallHeight;
+        this.cameraY = Math.max(DEFAULT_CAMERA_Y, Math.max(mapWidth, mapDepth) * 1.4f);
     }
 
     @Override
@@ -134,7 +146,7 @@ public final class RenderSystem implements GameSystem {
         this.camera = new Camera(window.getWidth(), window.getHeight());
         camera.setYaw(CAMERA_YAW);
         camera.setPitch(CAMERA_PITCH);
-        camera.setPosition(CAMERA_X, CAMERA_Y, CAMERA_Z);
+        camera.setPosition(CAMERA_X, cameraY, CAMERA_Z);
         System.out.println("[RenderSystem] Camera created: " + window.getWidth() + "x" + window.getHeight());
 
         // Create renderer and initialize
@@ -165,7 +177,7 @@ public final class RenderSystem implements GameSystem {
         System.out.println("[RenderSystem] Registered cube mesh");
         renderer.registerMesh("plane", PrimitiveFactory.createPlane());
         System.out.println("[RenderSystem] Registered plane mesh");
-        renderer.registerMesh("room", PrimitiveFactory.createRoom(10, 3, 10));
+        renderer.registerMesh("room", PrimitiveFactory.createRoom(mapWidth, wallHeight, mapDepth));
         System.out.println("[RenderSystem] Registered room mesh");
 
         // Register aliases for placeholder handles used by SpawnSystem
@@ -178,7 +190,7 @@ public final class RenderSystem implements GameSystem {
     }
 
     private void updateCamera() {
-        camera.setPosition(CAMERA_X, CAMERA_Y, CAMERA_Z);
+        camera.setPosition(CAMERA_X, cameraY, CAMERA_Z);
         camera.setYaw(CAMERA_YAW);
         camera.setPitch(CAMERA_PITCH);
     }
@@ -229,16 +241,9 @@ public final class RenderSystem implements GameSystem {
         for (int entityId : world.getActiveEntityIds()) {
             OrderComponent order = world.getComponent(entityId, OrderComponent.class);
             if (order != null) {
-                int breadDel = order.deliveredItems.getOrDefault("bread", 0);
-                int breadReq = order.currentOrder.getOrDefault("bread", 0);
-                int milkDel = order.deliveredItems.getOrDefault("milk", 0);
-                int milkReq = order.currentOrder.getOrDefault("milk", 0);
-                int applesDel = order.deliveredItems.getOrDefault("apples", 0);
-                int applesReq = order.currentOrder.getOrDefault("apples", 0);
                 int timeRemaining = (int) Math.ceil(order.timeRemainingSeconds);
-                orderStatusText = " | LEVEL " + order.currentLevel + " | Bread:" + breadDel + "/" + breadReq
-                        + " Milk:" + milkDel + "/" + milkReq + " Apples:" + applesDel + "/" + applesReq
-                        + " Time:" + timeRemaining + "s";
+                orderStatusText = " | LEVEL " + order.currentLevel + " | "
+                        + buildInlineOrderStatus(order) + " Time:" + timeRemaining + "s";
                 break;
             }
         }
@@ -317,7 +322,7 @@ public final class RenderSystem implements GameSystem {
         drawCube(
                 transform.position.x, transform.position.y, transform.position.z,
                 transform.scale.x, transform.scale.y, transform.scale.z,
-                color);
+                transform.rotation.y, color);
     }
 
     private void drawPlayer(EcsWorld world, TransformComponent transform) {
@@ -490,42 +495,29 @@ public final class RenderSystem implements GameSystem {
             return;
         }
 
-        int breadDel = order.deliveredItems.getOrDefault("bread", 0);
-        int breadReq = order.currentOrder.getOrDefault("bread", 0);
-        int milkDel = order.deliveredItems.getOrDefault("milk", 0);
-        int milkReq = order.currentOrder.getOrDefault("milk", 0);
-        int applesDel = order.deliveredItems.getOrDefault("apples", 0);
-        int applesReq = order.currentOrder.getOrDefault("apples", 0);
         int timeRemaining = (int) Math.ceil(order.timeRemainingSeconds);
 
-        String line1 = "LEVEL " + order.currentLevel;
-        String line2 = "Time: " + timeRemaining + "s";
-        String line3 = "Bread: " + breadDel + "/" + breadReq;
-        String line4 = "Milk: " + milkDel + "/" + milkReq;
-        String line5 = "Apples: " + applesDel + "/" + applesReq;
+        String[] lines = buildOrderStatusLines(order, timeRemaining);
 
         float scale = 1.0f;
         float padding = 16.0f;
         float lineHeight = textRenderer.getLineHeight(scale);
 
-        float maxWidth = Math.max(
-                Math.max(textRenderer.getTextWidth(line1, scale), textRenderer.getTextWidth(line2, scale)),
-                Math.max(
-                        Math.max(textRenderer.getTextWidth(line3, scale), textRenderer.getTextWidth(line4, scale)),
-                        textRenderer.getTextWidth(line5, scale)));
+        float maxWidth = 0.0f;
+        for (String line : lines) {
+            maxWidth = Math.max(maxWidth, textRenderer.getTextWidth(line, scale));
+        }
 
         float x = Math.max(padding, window.getWidth() - padding - maxWidth);
         float y = padding;
 
-        textRenderer.drawText(line1, x, y, scale, new float[] { 1.0f, 1.0f, 1.0f, 1.0f });
-        y += lineHeight;
-        textRenderer.drawText(line2, x, y, scale, new float[] { 1.0f, 0.92f, 0.40f, 1.0f });
-        y += lineHeight;
-        textRenderer.drawText(line3, x, y, scale, new float[] { 0.95f, 0.68f, 0.30f, 1.0f });
-        y += lineHeight;
-        textRenderer.drawText(line4, x, y, scale, new float[] { 0.92f, 0.96f, 1.0f, 1.0f });
-        y += lineHeight;
-        textRenderer.drawText(line5, x, y, scale, new float[] { 0.90f, 0.18f, 0.18f, 1.0f });
+        for (int index = 0; index < lines.length; index++) {
+            float[] color = index == 1
+                    ? new float[] { 1.0f, 0.92f, 0.40f, 1.0f }
+                    : new float[] { 1.0f, 1.0f, 1.0f, 1.0f };
+            textRenderer.drawText(lines[index], x, y, scale, color);
+            y += lineHeight;
+        }
     }
 
     private void drawInteractionPrompt(EcsWorld world) {
@@ -594,7 +586,49 @@ public final class RenderSystem implements GameSystem {
     }
 
     private void drawCube(float x, float y, float z, float scaleX, float scaleY, float scaleZ, float[] color) {
-        renderer.drawMeshByHandle("cube", x, y, z, scaleX, scaleY, scaleZ, color[0], color[1], color[2], color[3]);
+        drawCube(x, y, z, scaleX, scaleY, scaleZ, 0.0f, color);
+    }
+
+    private void drawCube(float x, float y, float z, float scaleX, float scaleY, float scaleZ,
+            float rotationYDegrees, float[] color) {
+        renderer.drawMeshByHandle("cube", x, y, z, scaleX, scaleY, scaleZ, rotationYDegrees,
+                color[0], color[1], color[2], color[3]);
+    }
+
+    private String buildInlineOrderStatus(OrderComponent order) {
+        StringBuilder builder = new StringBuilder();
+        for (String productType : order.currentOrder.keySet()) {
+            if (builder.length() > 0) {
+                builder.append(' ');
+            }
+            builder.append(capitalize(productType)).append(':')
+                    .append(order.deliveredItems.getOrDefault(productType, 0))
+                    .append('/')
+                    .append(order.currentOrder.getOrDefault(productType, 0));
+        }
+        return builder.toString();
+    }
+
+    private String[] buildOrderStatusLines(OrderComponent order, int timeRemaining) {
+        String[] lines = new String[order.currentOrder.size() + 2];
+        lines[0] = "LEVEL " + order.currentLevel;
+        lines[1] = "Time: " + timeRemaining + "s";
+        int index = 2;
+        for (String productType : order.currentOrder.keySet()) {
+            lines[index] = capitalize(productType) + ": "
+                    + order.deliveredItems.getOrDefault(productType, 0)
+                    + "/"
+                    + order.currentOrder.getOrDefault(productType, 0);
+            index++;
+        }
+        return lines;
+    }
+
+    private String capitalize(String value) {
+        if (value == null || value.isEmpty()) {
+            return "";
+        }
+        return value.substring(0, 1).toUpperCase() + value.substring(1);
     }
 
     private float[] getMaterialColor(String materialHandle) {
@@ -651,35 +685,39 @@ public final class RenderSystem implements GameSystem {
 
     private void drawRoomWalls(EcsWorld world) {
         float[] floorColor = getThemeFloorColor(world);
+        float halfWidth = mapWidth * 0.5f;
+        float halfDepth = mapDepth * 0.5f;
+        float wallThickness = 0.2f;
+        float wallY = wallHeight * 0.5f;
 
         // Left wall
         drawCube(
-                -5.0f, 1.5f, 0.0f,
-                0.2f, 3.0f, 10.0f,
+                -halfWidth, wallY, 0.0f,
+                wallThickness, wallHeight, mapDepth,
                 new float[] { 0.45f, 0.45f, 0.45f, 1.0f });
 
         // Right wall
         drawCube(
-                5.0f, 1.5f, 0.0f,
-                0.2f, 3.0f, 10.0f,
+                halfWidth, wallY, 0.0f,
+                wallThickness, wallHeight, mapDepth,
                 new float[] { 0.45f, 0.45f, 0.45f, 1.0f });
 
         // Top wall
         drawCube(
-                0.0f, 1.5f, -5.0f,
-                10.0f, 3.0f, 0.2f,
+                0.0f, wallY, -halfDepth,
+                mapWidth, wallHeight, wallThickness,
                 new float[] { 0.45f, 0.45f, 0.45f, 1.0f });
 
         // Bottom wall
         drawCube(
-                0.0f, 1.5f, 5.0f,
-                10.0f, 3.0f, 0.2f,
+                0.0f, wallY, halfDepth,
+                mapWidth, wallHeight, wallThickness,
                 new float[] { 0.45f, 0.45f, 0.45f, 1.0f });
 
         // Floor
         drawCube(
                 0.0f, -0.1f, 0.0f,
-                10.0f, 0.1f, 10.0f,
+                mapWidth, 0.1f, mapDepth,
                 floorColor);
     }
 

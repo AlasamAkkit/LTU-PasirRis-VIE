@@ -7,6 +7,7 @@ import java.util.List;
 
 public final class WorldConfig {
     public String name = "Unnamed Scenario";
+    public MapSettings map = new MapSettings();
     public PlayerSpawn player = new PlayerSpawn();
     public AssistantSpawn assistant = new AssistantSpawn();
     public OrderRules orderRules = new OrderRules();
@@ -14,6 +15,34 @@ public final class WorldConfig {
     public List<ShelfSpawn> shelves = new ArrayList<>();
     public List<ProductSpawn> products = new ArrayList<>();
     public List<OrderBoxSpawn> orderBoxes = new ArrayList<>();
+
+    public static final class MapSettings {
+        public float width = 10.0f;
+        public float depth = 10.0f;
+        public float wallHeight = 3.0f;
+        public float playableMarginX = 0.4f;
+        public float playableMarginZ = 0.6f;
+        public float navigationCellSize = 0.4f;
+
+        public MapSettings() {
+        }
+
+        public float minX() {
+            return -width * 0.5f + playableMarginX;
+        }
+
+        public float maxX() {
+            return width * 0.5f - playableMarginX;
+        }
+
+        public float minZ() {
+            return -depth * 0.5f + playableMarginZ;
+        }
+
+        public float maxZ() {
+            return depth * 0.5f - playableMarginZ;
+        }
+    }
 
     public static final class PlayerSpawn {
         public boolean spawnOnStart = true;
@@ -28,6 +57,7 @@ public final class WorldConfig {
         public boolean spawnOnStart = true;
         public String id = "";
         public Vector3 position = new Vector3();
+        public float rotationYDegrees = 0.0f;
 
         public ShelfSpawn() {
         }
@@ -68,6 +98,7 @@ public final class WorldConfig {
 
         public List<Float> levelTimeLimitsSeconds = new ArrayList<>(List.of(75.0f, 60.0f, 45.0f));
         public String failureBehavior = RESTART_CURRENT_LEVEL;
+        public List<String> productTypes = new ArrayList<>(List.of("bread", "milk", "apples"));
 
         public OrderRules() {
         }

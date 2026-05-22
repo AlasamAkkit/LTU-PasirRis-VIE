@@ -11,7 +11,7 @@ public final class InputSystem implements GameSystem {
     private final Window window;
     private boolean previousInteractKeyDown;
     private boolean previousDropKeyDown;
-    private final boolean[] previousChoiceKeyDown = new boolean[3];
+    private final boolean[] previousChoiceKeyDown = new boolean[9];
 
     public InputSystem(Window window) {
         this.window = window;

@@ -95,7 +95,7 @@ public final class ThemeSelectionSystem implements GameSystem {
         createNavigationGrid(world);
         spawnSystem.spawnWorld(world, worldConfig);
         if (worldConfig.assistant.spawnOnStart) {
-            AssistantAgentFactory.spawnAssistant(world, worldConfig.assistant);
+            AssistantAgentFactory.spawnAssistant(world, worldConfig.assistant, worldConfig.orderRules.productTypes);
         }
         createOrderEntity(world);
         clearSelectionInput(world);
@@ -163,11 +163,11 @@ public final class ThemeSelectionSystem implements GameSystem {
     private void createNavigationGrid(EcsWorld world) {
         int navigationEntityId = world.createEntity();
         NavigationGridComponent grid = world.addComponent(navigationEntityId, new NavigationGridComponent());
-        grid.minX = -4.6f;
-        grid.maxX = 4.6f;
-        grid.minZ = -4.4f;
-        grid.maxZ = 4.4f;
-        grid.cellSize = 0.4f;
+        grid.minX = worldConfig.map.minX();
+        grid.maxX = worldConfig.map.maxX();
+        grid.minZ = worldConfig.map.minZ();
+        grid.maxZ = worldConfig.map.maxZ();
+        grid.cellSize = worldConfig.map.navigationCellSize;
     }
 
     private void createOrderEntity(EcsWorld world) {

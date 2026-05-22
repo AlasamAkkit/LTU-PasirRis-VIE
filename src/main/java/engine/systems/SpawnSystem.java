@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class SpawnSystem implements GameSystem {
+    private static final float SHELF_ANCHOR_Y = 0.9f;
+
     @Override
     public void update(EcsWorld world, float deltaSeconds) {
         // Intentionally empty for now. This system exists as the home for config-driven
@@ -54,28 +56,43 @@ public final class SpawnSystem implements GameSystem {
     }
 
     public int spawnShelf(EcsWorld world, String shelfId, Vector3 position) {
-        int entityId = spawnProp(world, position, new Vector3(1.35f, 1.7f, 0.12f), "shelf-back-material");
+        return spawnShelf(world, shelfId, position, 0.0f);
+    }
+
+    public int spawnShelf(EcsWorld world, String shelfId, Vector3 position, float rotationYDegrees) {
+        Vector3 shelfPosition = new Vector3(position.x, SHELF_ANCHOR_Y, position.z);
+        int entityId = spawnProp(world, shelfPosition, new Vector3(1.35f, 1.7f, 0.12f),
+                "shelf-back-material", rotationYDegrees);
         ShelfComponent shelf = world.addComponent(entityId, new ShelfComponent());
         shelf.shelfId = shelfId;
         ColliderComponent collider = world.addComponent(entityId, new ColliderComponent());
         collider.trigger = false;
-        collider.halfExtents.set(0.8f, 0.85f, 0.4f);
-        collider.offset.set(0.0f, 0.0f, 0.09f);
+        Vector3 colliderHalfExtents = rotatedHalfExtents(0.8f, 0.4f, rotationYDegrees);
+        Vector3 colliderOffset = rotateShelfOffset(0.0f, 0.09f, rotationYDegrees);
+        collider.halfExtents.set(colliderHalfExtents.x, 0.85f, colliderHalfExtents.z);
+        collider.offset.set(colliderOffset.x, 0.0f, colliderOffset.z);
         NavigationObstacleComponent obstacle = world.addComponent(entityId, new NavigationObstacleComponent());
-        obstacle.halfExtents.set(0.95f, 0.0f, 0.62f);
+        Vector3 obstacleHalfExtents = rotatedHalfExtents(0.95f, 0.62f, rotationYDegrees);
+        obstacle.halfExtents.set(obstacleHalfExtents.x, 0.0f, obstacleHalfExtents.z);
 
-        spawnProp(world, new Vector3(position.x, 0.25f, position.z + 0.18f), new Vector3(1.45f, 0.12f, 0.75f),
-                "shelf-plank-material");
-        spawnProp(world, new Vector3(position.x, 0.82f, position.z + 0.18f), new Vector3(1.45f, 0.10f, 0.75f),
-                "shelf-plank-material");
-        spawnProp(world, new Vector3(position.x, 1.38f, position.z + 0.18f), new Vector3(1.45f, 0.10f, 0.75f),
-                "shelf-plank-material");
-        spawnProp(world, new Vector3(position.x - 0.75f, 0.85f, position.z + 0.18f), new Vector3(0.12f, 1.75f, 0.75f),
-                "shelf-frame-material");
-        spawnProp(world, new Vector3(position.x + 0.75f, 0.85f, position.z + 0.18f), new Vector3(0.12f, 1.75f, 0.75f),
-                "shelf-frame-material");
-        spawnProp(world, new Vector3(position.x, 1.98f, position.z + 0.35f), new Vector3(1.55f, 0.28f, 0.10f),
-                signMaterialForShelf(shelfId));
+        spawnShelfPart(world, shelfPosition, 0.0f, 0.25f, 0.18f,
+                new Vector3(1.45f, 0.12f, 0.75f),
+                "shelf-plank-material", rotationYDegrees);
+        spawnShelfPart(world, shelfPosition, 0.0f, 0.82f, 0.18f,
+                new Vector3(1.45f, 0.10f, 0.75f),
+                "shelf-plank-material", rotationYDegrees);
+        spawnShelfPart(world, shelfPosition, 0.0f, 1.38f, 0.18f,
+                new Vector3(1.45f, 0.10f, 0.75f),
+                "shelf-plank-material", rotationYDegrees);
+        spawnShelfPart(world, shelfPosition, -0.75f, 0.85f, 0.18f,
+                new Vector3(0.12f, 1.75f, 0.75f),
+                "shelf-frame-material", rotationYDegrees);
+        spawnShelfPart(world, shelfPosition, 0.75f, 0.85f, 0.18f,
+                new Vector3(0.12f, 1.75f, 0.75f),
+                "shelf-frame-material", rotationYDegrees);
+        spawnShelfPart(world, shelfPosition, 0.0f, 1.98f, 0.35f,
+                new Vector3(1.55f, 0.28f, 0.10f),
+                signMaterialForShelf(shelfId), rotationYDegrees);
         return entityId;
     }
 
@@ -154,7 +171,7 @@ public final class SpawnSystem implements GameSystem {
 
         for (WorldConfig.ShelfSpawn shelfSpawn : config.shelves) {
             if (shelfSpawn.spawnOnStart) {
-                spawnShelf(world, shelfSpawn.id, shelfSpawn.position);
+                spawnShelf(world, shelfSpawn.id, shelfSpawn.position, shelfSpawn.rotationYDegrees);
             }
         }
 
@@ -188,21 +205,52 @@ public final class SpawnSystem implements GameSystem {
         if (productSpawn.shelfId != null && !productSpawn.shelfId.isBlank()) {
             WorldConfig.ShelfSpawn shelf = shelvesById.get(productSpawn.shelfId);
             Vector3 offset = productSpawn.offsetFromShelf;
+            Vector3 rotatedOffset = rotateShelfOffset(offset.x, offset.z, shelf.rotationYDegrees);
             return new Vector3(
-                    shelf.position.x + offset.x,
-                    shelf.position.y + offset.y,
-                    shelf.position.z + offset.z);
+                    shelf.position.x + rotatedOffset.x,
+                    SHELF_ANCHOR_Y + offset.y,
+                    shelf.position.z + rotatedOffset.z);
         }
         return productSpawn.position.copy();
     }
 
     public int spawnProp(EcsWorld world, Vector3 position, Vector3 scale, String materialHandle) {
+        return spawnProp(world, position, scale, materialHandle, 0.0f);
+    }
+
+    public int spawnProp(EcsWorld world, Vector3 position, Vector3 scale, String materialHandle,
+            float rotationYDegrees) {
         int entityId = world.createEntity();
         TransformComponent transform = world.addComponent(entityId, new TransformComponent());
         transform.position.set(position);
+        transform.rotation.y = rotationYDegrees;
         transform.scale.set(scale);
         world.addComponent(entityId, new RenderComponent("cube", materialHandle));
         return entityId;
+    }
+
+    private int spawnShelfPart(EcsWorld world, Vector3 shelfPosition, float localX, float y, float localZ,
+            Vector3 scale, String materialHandle, float rotationYDegrees) {
+        Vector3 rotatedOffset = rotateShelfOffset(localX, localZ, rotationYDegrees);
+        Vector3 position = new Vector3(
+                shelfPosition.x + rotatedOffset.x,
+                y,
+                shelfPosition.z + rotatedOffset.z);
+        return spawnProp(world, position, scale, materialHandle, rotationYDegrees);
+    }
+
+    private Vector3 rotateShelfOffset(float x, float z, float rotationYDegrees) {
+        double radians = Math.toRadians(rotationYDegrees);
+        float cos = (float) Math.cos(radians);
+        float sin = (float) Math.sin(radians);
+        return new Vector3(x * cos + z * sin, 0.0f, -x * sin + z * cos);
+    }
+
+    private Vector3 rotatedHalfExtents(float halfX, float halfZ, float rotationYDegrees) {
+        double radians = Math.toRadians(rotationYDegrees);
+        float cos = Math.abs((float) Math.cos(radians));
+        float sin = Math.abs((float) Math.sin(radians));
+        return new Vector3(halfX * cos + halfZ * sin, 0.0f, halfX * sin + halfZ * cos);
     }
 
     private void spawnStoreDecoration(EcsWorld world) {

@@ -111,15 +111,26 @@ public final class OrderTrackingSystem implements GameSystem {
     }
 
     private void printOrderStatus(OrderComponent order) {
-        int breadDel = order.deliveredItems.getOrDefault("bread", 0);
-        int breadReq = order.currentOrder.getOrDefault("bread", 0);
-        int milkDel = order.deliveredItems.getOrDefault("milk", 0);
-        int milkReq = order.currentOrder.getOrDefault("milk", 0);
-        int applesDel = order.deliveredItems.getOrDefault("apples", 0);
-        int applesReq = order.currentOrder.getOrDefault("apples", 0);
-        
-        System.out.println("[ORDER] Level " + order.currentLevel + " - Bread: " + breadDel + "/" + breadReq
-                + " | Milk: " + milkDel + "/" + milkReq + " | Apples: " + applesDel + "/" + applesReq);
+        StringBuilder builder = new StringBuilder();
+        for (String productType : order.currentOrder.keySet()) {
+            if (builder.length() > 0) {
+                builder.append(" | ");
+            }
+            builder.append(capitalize(productType))
+                    .append(": ")
+                    .append(order.deliveredItems.getOrDefault(productType, 0))
+                    .append("/")
+                    .append(order.currentOrder.getOrDefault(productType, 0));
+        }
+
+        System.out.println("[ORDER] Level " + order.currentLevel + " - " + builder);
         System.out.flush();
+    }
+
+    private String capitalize(String value) {
+        if (value == null || value.isEmpty()) {
+            return "";
+        }
+        return value.substring(0, 1).toUpperCase() + value.substring(1);
     }
 }

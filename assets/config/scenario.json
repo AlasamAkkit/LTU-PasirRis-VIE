@@ -1,5 +1,13 @@
 {
   "name": "Default Supermarket Scenario",
+  "map": {
+    "width": 10.0,
+    "depth": 10.0,
+    "wallHeight": 3.0,
+    "playableMarginX": 0.4,
+    "playableMarginZ": 0.6,
+    "navigationCellSize": 0.4
+  },
   "player": {
     "spawnOnStart": true,
     "position": {
@@ -20,7 +28,8 @@
   },
   "orderRules": {
     "levelTimeLimitsSeconds": [75.0, 60.0, 45.0],
-    "failureBehavior": "restart-current-level"  
+    "failureBehavior": "restart-current-level",
+    "productTypes": ["bread", "milk", "apples", "eggs"]
   },
   "messRules": {
     "enabled": true,
@@ -38,7 +47,8 @@
         "x": -3.2,
         "y": 0.9,
         "z": -2.0
-      }
+      },
+      "rotationYDegrees": 0.0
     },
     {
       "spawnOnStart": true,
@@ -47,7 +57,8 @@
         "x": 0.0,
         "y": 0.9,
         "z": -2.9
-      }
+      },
+      "rotationYDegrees": 0.0
     },
     {
       "spawnOnStart": true,
@@ -56,7 +67,18 @@
         "x": 3.2,
         "y": 0.9,
         "z": -2.0
-      }
+      },
+      "rotationYDegrees": 0.0
+    },
+    {
+      "spawnOnStart": true,
+      "id": "eggs-shelf",
+      "position": {
+        "x": 3.2,
+        "y": 0.9,
+        "z": 2.0
+      },
+      "rotationYDegrees": 0.0
     }
   ],
   "products": [
@@ -86,6 +108,17 @@
       "spawnOnStart": true,
       "productType": "apples",
       "shelfId": "produce-shelf",
+      "offsetFromShelf": {
+        "x": 0.0,
+        "y": -0.38,
+        "z": 0.65
+      },
+      "respawnOnPickup": true
+    },
+    {
+      "spawnOnStart": true,
+      "productType": "eggs",
+      "shelfId": "eggs-shelf",
       "offsetFromShelf": {
         "x": 0.0,
         "y": -0.38,

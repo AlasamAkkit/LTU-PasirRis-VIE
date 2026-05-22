@@ -1,6 +1,6 @@
 package engine.components;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -18,10 +18,10 @@ public final class OrderComponent {
     public int currentLevel = 1;
     
     // Current order requirements: product type -> required quantity
-    public final Map<String, Integer> currentOrder = new HashMap<>();
+    public final Map<String, Integer> currentOrder = new LinkedHashMap<>();
     
     // Delivered items: product type -> delivered quantity
-    public final Map<String, Integer> deliveredItems = new HashMap<>();
+    public final Map<String, Integer> deliveredItems = new LinkedHashMap<>();
     
     // Flag to indicate order is complete (used by UI system)
     public boolean orderComplete = false;
@@ -42,9 +42,10 @@ public final class OrderComponent {
      * Called when a new order is generated.
      */
     public void resetDelivered() {
-        deliveredItems.put("bread", 0);
-        deliveredItems.put("milk", 0);
-        deliveredItems.put("apples", 0);
+        deliveredItems.clear();
+        for (String productType : currentOrder.keySet()) {
+            deliveredItems.put(productType, 0);
+        }
     }
 
     /**
@@ -83,7 +84,7 @@ public final class OrderComponent {
         StringBuilder sb = new StringBuilder();
         sb.append("Level ").append(currentLevel).append(" Order:\n");
         
-        for (String productType : new String[]{"bread", "milk", "apples"}) {
+        for (String productType : currentOrder.keySet()) {
             int delivered = deliveredItems.getOrDefault(productType, 0);
             int required = currentOrder.getOrDefault(productType, 0);
             sb.append(capitalize(productType)).append(": ").append(delivered).append("/").append(required).append("\n");

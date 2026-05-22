@@ -43,49 +43,31 @@ public final class OrderUISystem implements GameSystem {
             return;
         }
 
-        int breadRequired = order.currentOrder.getOrDefault("bread", 0);
-        int milkRequired = order.currentOrder.getOrDefault("milk", 0);
-        int applesRequired = order.currentOrder.getOrDefault("apples", 0);
-        int breadDelivered = order.deliveredItems.getOrDefault("bread", 0);
-        int milkDelivered = order.deliveredItems.getOrDefault("milk", 0);
-        int applesDelivered = order.deliveredItems.getOrDefault("apples", 0);
         int timeRemaining = (int) Math.ceil(order.timeRemainingSeconds);
+        String nextOrderText = buildOrderText(order, timeRemaining);
 
-        if (order.currentLevel != lastLevel
-                || breadRequired != lastBreadRequired
-                || milkRequired != lastMilkRequired
-                || applesRequired != lastApplesRequired
-                || breadDelivered != lastBreadDelivered
-                || milkDelivered != lastMilkDelivered
-                || applesDelivered != lastApplesDelivered
-                || timeRemaining != lastDisplayedTimeRemaining) {
-            cachedOrderText = buildOrderText(order.currentLevel, breadDelivered, breadRequired, milkDelivered,
-                    milkRequired, applesDelivered, applesRequired, timeRemaining);
+        if (!nextOrderText.equals(cachedOrderText)) {
+            cachedOrderText = nextOrderText;
             lastLevel = order.currentLevel;
-            lastBreadRequired = breadRequired;
-            lastMilkRequired = milkRequired;
-            lastApplesRequired = applesRequired;
-            lastBreadDelivered = breadDelivered;
-            lastMilkDelivered = milkDelivered;
-            lastApplesDelivered = applesDelivered;
             lastDisplayedTimeRemaining = timeRemaining;
             
             // Print order state to console for debugging
-            logOrderState(order.currentLevel, breadDelivered, breadRequired, milkDelivered,
-                    milkRequired, applesDelivered, applesRequired);
+            logOrderState(order);
         }
 
         // Update window title with order information
         updateWindowTitle();
     }
 
-    private void logOrderState(int level, int breadDelivered, int breadRequired, int milkDelivered,
-            int milkRequired, int applesDelivered, int applesRequired) {
+    private void logOrderState(OrderComponent order) {
         System.out.println("\n[ORDER STATUS]");
-        System.out.println("  Level: " + level);
-        System.out.println("  Bread: " + breadDelivered + "/" + breadRequired);
-        System.out.println("  Milk: " + milkDelivered + "/" + milkRequired);
-        System.out.println("  Apples: " + applesDelivered + "/" + applesRequired);
+        System.out.println("  Level: " + order.currentLevel);
+        for (String productType : order.currentOrder.keySet()) {
+            System.out.println("  " + capitalize(productType) + ": "
+                    + order.deliveredItems.getOrDefault(productType, 0)
+                    + "/"
+                    + order.currentOrder.getOrDefault(productType, 0));
+        }
         System.out.println();
     }
 
@@ -136,14 +118,27 @@ public final class OrderUISystem implements GameSystem {
         return null;
     }
 
-    private String buildOrderText(int level, int breadDelivered, int breadRequired, int milkDelivered,
-            int milkRequired, int applesDelivered, int applesRequired, int timeRemaining) {
-        return new StringBuilder(96)
-                .append("Level ").append(level).append(" Order:\n")
-                .append("Time: ").append(timeRemaining).append("s\n")
-                .append("Bread: ").append(breadDelivered).append('/').append(breadRequired).append('\n')
-                .append("Milk: ").append(milkDelivered).append('/').append(milkRequired).append('\n')
-                .append("Apples: ").append(applesDelivered).append('/').append(applesRequired)
-                .toString();
+    private String buildOrderText(OrderComponent order, int timeRemaining) {
+        StringBuilder builder = new StringBuilder(96)
+                .append("Level ").append(order.currentLevel).append(" Order:\n")
+                .append("Time: ").append(timeRemaining).append("s");
+
+        for (String productType : order.currentOrder.keySet()) {
+            builder.append('\n')
+                    .append(capitalize(productType))
+                    .append(": ")
+                    .append(order.deliveredItems.getOrDefault(productType, 0))
+                    .append('/')
+                    .append(order.currentOrder.getOrDefault(productType, 0));
+        }
+
+        return builder.toString();
+    }
+
+    private String capitalize(String value) {
+        if (value == null || value.isEmpty()) {
+            return "";
+        }
+        return value.substring(0, 1).toUpperCase() + value.substring(1);
     }
 }

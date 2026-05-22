@@ -57,11 +57,12 @@ public final class OrderGenerationSystem implements GameSystem {
      */
     private void generateNewOrder(EcsWorld world, OrderComponent order) {
         int maxQuantity = order.currentLevel;
-        
-        // Random quantity: 1 to maxQuantity inclusive
-        order.currentOrder.put("bread", 1 + random.nextInt(maxQuantity));
-        order.currentOrder.put("milk", 1 + random.nextInt(maxQuantity));
-        order.currentOrder.put("apples", 1 + random.nextInt(maxQuantity));
+
+        order.currentOrder.clear();
+        for (String productType : orderRules.productTypes) {
+            // Random quantity: 1 to maxQuantity inclusive
+            order.currentOrder.put(productType, 1 + random.nextInt(maxQuantity));
+        }
         
         // Reset delivered items for new order
         order.resetDelivered();
@@ -144,12 +145,20 @@ public final class OrderGenerationSystem implements GameSystem {
     }
 
     private void logOrderGeneration(OrderComponent order) {
-        String bread = String.valueOf(order.currentOrder.get("bread"));
-        String milk = String.valueOf(order.currentOrder.get("milk"));
-        String apples = String.valueOf(order.currentOrder.get("apples"));
         System.out.println("\n========================================");
-        System.out.println("[OrderGenerationSystem] Generated Level " + order.currentLevel 
-                         + " order: Bread=" + bread + ", Milk=" + milk + ", Apple=" + apples);
+        System.out.println("[OrderGenerationSystem] Generated Level " + order.currentLevel
+                         + " order: " + buildOrderSummary(order));
         System.out.println("========================================\n");
+    }
+
+    private String buildOrderSummary(OrderComponent order) {
+        StringBuilder builder = new StringBuilder();
+        for (String productType : order.currentOrder.keySet()) {
+            if (builder.length() > 0) {
+                builder.append(", ");
+            }
+            builder.append(productType).append('=').append(order.currentOrder.get(productType));
+        }
+        return builder.toString();
     }
 }
