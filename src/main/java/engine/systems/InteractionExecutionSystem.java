@@ -1,5 +1,7 @@
 package engine.systems;
 
+import java.util.Random;
+
 import engine.components.InputComponent;
 import engine.components.InventoryComponent;
 import engine.components.MessComponent;
@@ -12,8 +14,6 @@ import engine.ecs.GameSystem;
 import engine.math.Vector3;
 import game.config.WorldConfig;
 import game.content.MessFactory;
-
-import java.util.Random;
 
 public final class InteractionExecutionSystem implements GameSystem {
     private final SpawnSystem spawnSystem = new SpawnSystem();
@@ -76,7 +76,7 @@ public final class InteractionExecutionSystem implements GameSystem {
 
         if (product.respawnOnPickup) {
             Vector3 respawnPosition = new Vector3(product.respawnX, product.respawnY, product.respawnZ);
-            spawnSystem.spawnShelfProduct(world, product.productType, respawnPosition);
+            spawnSystem.spawnShelfProduct(world, product.productType, respawnPosition, true, product.color);
             product.respawnOnPickup = false;
         }
 

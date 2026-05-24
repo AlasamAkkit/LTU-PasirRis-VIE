@@ -2,9 +2,9 @@ package game.systems;
 
 import engine.components.DialogueChoiceComponent;
 import engine.components.InputComponent;
-import engine.components.InventoryComponent;
 import engine.components.InteractableComponent;
 import engine.components.InteractionPromptComponent;
+import engine.components.InventoryComponent;
 import engine.components.MessComponent;
 import engine.components.OrderBoxComponent;
 import engine.components.ProductComponent;
@@ -86,11 +86,11 @@ public final class InteractionPromptSystem implements GameSystem {
         text.append(title);
 
         if (dialogue.choiceLabels.length == 0) {
-            text.append("\nUse 1-3 to choose");
+            text.append("\nEnter key for options below:");
             return text.toString();
         }
 
-        text.append("\nUse 1-3 to choose");
+        text.append("\nEnter key for options below:");
         for (String choiceLabel : dialogue.choiceLabels) {
             if (choiceLabel == null || choiceLabel.isEmpty()) {
                 continue;

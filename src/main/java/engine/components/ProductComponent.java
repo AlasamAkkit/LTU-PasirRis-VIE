@@ -5,6 +5,7 @@ import java.util.Map;
 
 public class ProductComponent {
     public String productType;
+    public float[] color;
     public final Map<String, String> metadata = new LinkedHashMap<>();
     public int holderEntityId = -1;
     public boolean availableInWorld = true;

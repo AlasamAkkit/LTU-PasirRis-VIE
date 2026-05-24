@@ -5,14 +5,14 @@ import java.io.IOException;
 import engine.camera.Camera;
 import engine.components.DialogueChoiceComponent;
 import engine.components.InputComponent;
-import engine.components.InventoryComponent;
 import engine.components.InteractionPromptComponent;
+import engine.components.InventoryComponent;
 import engine.components.OrderBoxComponent;
 import engine.components.OrderComponent;
 import engine.components.ProductComponent;
 import engine.components.RenderComponent;
-import engine.components.ThemeSelectionComponent;
 import engine.components.TaskComponent;
+import engine.components.ThemeSelectionComponent;
 import engine.components.TransformComponent;
 import engine.ecs.EcsWorld;
 import engine.ecs.GameSystem;
@@ -272,18 +272,7 @@ public final class RenderSystem implements GameSystem {
         }
         if ("placeholder-product".equals(render.meshHandle)) {
             ProductComponent product = world.getComponent(entityId, ProductComponent.class);
-            if (product != null) {
-                if ("milk".equals(product.productType)) {
-                    return new float[] { 0.92f, 0.96f, 1.0f, 1.0f };
-                }
-                if ("bread".equals(product.productType)) {
-                    return new float[] { 0.95f, 0.68f, 0.30f, 1.0f };
-                }
-                if ("apples".equals(product.productType)) {
-                    return new float[] { 0.90f, 0.18f, 0.18f, 1.0f };
-                }
-            }
-            return new float[] { 0.30f, 0.85f, 0.40f, 1.0f };
+            return resolveProductColor(product);
         }
         if ("placeholder-order-box".equals(render.meshHandle)) {
             OrderBoxComponent orderBox = world.getComponent(entityId, OrderBoxComponent.class);
@@ -353,55 +342,89 @@ public final class RenderSystem implements GameSystem {
     }
 
     private void drawProduct(TransformComponent transform, ProductComponent product) {
+        float[] baseColor = resolveProductColor(product);
         if (product == null || product.productType == null) {
-            float[] color = new float[] { 0.30f, 0.85f, 0.40f, 1.0f };
             drawCube(transform.position.x, transform.position.y, transform.position.z, transform.scale.x,
-                    transform.scale.y, transform.scale.z, color);
+                transform.scale.y, transform.scale.z, baseColor);
             return;
         }
 
         float x = transform.position.x;
         float y = transform.position.y;
         float z = transform.position.z;
+        float[] accentColor = shadeColor(baseColor, 0.82f);
+        float[] shadowColor = shadeColor(baseColor, 0.68f);
 
         if ("milk".equals(product.productType)) {
             drawCube(x, y, z, transform.scale.x, transform.scale.y, transform.scale.z,
-                    new float[] { 0.92f, 0.96f, 1.0f, 1.0f });
+                baseColor);
             drawCube(x, y + transform.scale.y * 0.48f, z, transform.scale.x * 0.72f, transform.scale.y * 0.20f,
-                    transform.scale.z * 0.72f, new float[] { 0.45f, 0.76f, 1.0f, 1.0f });
+                transform.scale.z * 0.72f, accentColor);
             drawCube(x, y, z - transform.scale.z * 0.52f, transform.scale.x * 0.70f, transform.scale.y * 0.38f, 0.035f,
-                    new float[] { 0.12f, 0.38f, 0.85f, 1.0f });
+                shadowColor);
             return;
         }
 
         if ("bread".equals(product.productType)) {
             drawCube(x, y, z, transform.scale.x, transform.scale.y, transform.scale.z,
-                    new float[] { 0.95f, 0.68f, 0.30f, 1.0f });
+                baseColor);
             drawCube(x, y + transform.scale.y * 0.42f, z, transform.scale.x * 0.82f, transform.scale.y * 0.18f,
-                    transform.scale.z * 0.82f, new float[] { 0.70f, 0.42f, 0.18f, 1.0f });
+                transform.scale.z * 0.82f, accentColor);
             drawCube(x - transform.scale.x * 0.22f, y + transform.scale.y * 0.55f, z, 0.035f, transform.scale.y * 0.20f,
-                    transform.scale.z * 0.90f, new float[] { 0.55f, 0.32f, 0.12f, 1.0f });
+                transform.scale.z * 0.90f, shadowColor);
             drawCube(x + transform.scale.x * 0.22f, y + transform.scale.y * 0.55f, z, 0.035f, transform.scale.y * 0.20f,
-                    transform.scale.z * 0.90f, new float[] { 0.55f, 0.32f, 0.12f, 1.0f });
+                transform.scale.z * 0.90f, shadowColor);
             return;
         }
 
         if ("apples".equals(product.productType)) {
             float appleSize = Math.max(0.16f, transform.scale.x * 0.55f);
             drawCube(x - appleSize * 0.55f, y, z, appleSize, appleSize, appleSize,
-                    new float[] { 0.90f, 0.18f, 0.18f, 1.0f });
+                baseColor);
             drawCube(x + appleSize * 0.55f, y, z, appleSize, appleSize, appleSize,
-                    new float[] { 0.82f, 0.12f, 0.12f, 1.0f });
+                accentColor);
             drawCube(x, y + appleSize * 0.42f, z + appleSize * 0.35f, appleSize, appleSize, appleSize,
-                    new float[] { 0.95f, 0.22f, 0.18f, 1.0f });
+                shadowColor);
             drawCube(x, y + appleSize * 1.05f, z, appleSize * 0.70f, appleSize * 0.20f, appleSize * 0.45f,
                     new float[] { 0.22f, 0.58f, 0.22f, 1.0f });
             return;
         }
 
         drawCube(x, y, z, transform.scale.x, transform.scale.y, transform.scale.z,
-                new float[] { 0.30f, 0.85f, 0.40f, 1.0f });
+            baseColor);
     }
+
+        private float[] resolveProductColor(ProductComponent product) {
+        if (product != null && product.color != null && product.color.length == 4) {
+            return product.color;
+        }
+        if (product == null || product.productType == null) {
+            return new float[] { 0.30f, 0.85f, 0.40f, 1.0f };
+        }
+        if ("milk".equals(product.productType)) {
+            return new float[] { 0.92f, 0.96f, 1.0f, 1.0f };
+        }
+        if ("bread".equals(product.productType)) {
+            return new float[] { 0.95f, 0.68f, 0.30f, 1.0f };
+        }
+        if ("apples".equals(product.productType)) {
+            return new float[] { 0.90f, 0.18f, 0.18f, 1.0f };
+        }
+        return new float[] { 0.30f, 0.85f, 0.40f, 1.0f };
+        }
+
+        private float[] shadeColor(float[] color, float factor) {
+        return new float[] {
+            clamp01(color[0] * factor),
+            clamp01(color[1] * factor),
+            clamp01(color[2] * factor),
+            color[3]
+        };
+        }
+
+        private float clamp01(float value) {
+        return Math.max(0.0f, Math.min(1.0f, value));
+        }
 
     private void drawOrderBox(TransformComponent transform, OrderBoxComponent orderBox) {
         float x = transform.position.x;
