@@ -145,6 +145,12 @@ public class Renderer {
     public void drawMesh(Mesh mesh, float posX, float posY, float posZ,
                          float scaleX, float scaleY, float scaleZ,
                          float r, float g, float b, float a) {
+        drawMesh(mesh, posX, posY, posZ, scaleX, scaleY, scaleZ, 0.0f, r, g, b, a);
+    }
+
+    public void drawMesh(Mesh mesh, float posX, float posY, float posZ,
+                         float scaleX, float scaleY, float scaleZ, float rotationYDegrees,
+                         float r, float g, float b, float a) {
         if (mesh == null || activeCamera == null) {
             System.err.println("[Renderer] Cannot draw: mesh=" + (mesh != null) + " camera=" + (activeCamera != null));
             System.err.flush();
@@ -153,10 +159,8 @@ public class Renderer {
 
         drawCallCount++;
 
-        // Build model matrix: translate and scale
-        identityMatrix(modelMatrix);
-        translateMatrix(modelMatrix, posX, posY, posZ);
-        scaleMatrixInPlace(modelMatrix, scaleX, scaleY, scaleZ);
+        // Build model matrix: translate, rotate around Y, then scale.
+        setTransformMatrix(modelMatrix, posX, posY, posZ, scaleX, scaleY, scaleZ, rotationYDegrees);
 
         // Use shader and set uniforms
         basicShader.use();
@@ -203,10 +207,16 @@ public class Renderer {
     public void drawMeshByHandle(String meshHandle, float posX, float posY, float posZ,
                                   float scaleX, float scaleY, float scaleZ,
                                   float r, float g, float b, float a) {
+        drawMeshByHandle(meshHandle, posX, posY, posZ, scaleX, scaleY, scaleZ, 0.0f, r, g, b, a);
+    }
+
+    public void drawMeshByHandle(String meshHandle, float posX, float posY, float posZ,
+                                  float scaleX, float scaleY, float scaleZ, float rotationYDegrees,
+                                  float r, float g, float b, float a) {
         Mesh mesh = getMesh(meshHandle);
         if (mesh != null) {
             System.out.flush();
-            drawMesh(mesh, posX, posY, posZ, scaleX, scaleY, scaleZ, r, g, b, a);
+            drawMesh(mesh, posX, posY, posZ, scaleX, scaleY, scaleZ, rotationYDegrees, r, g, b, a);
         } else {
             System.err.println("[Renderer] Mesh not found: " + meshHandle);
             System.err.flush();
@@ -230,27 +240,33 @@ public class Renderer {
         m[0] = m[5] = m[10] = m[15] = 1;
     }
 
-    private void translateMatrix(float[] m, float x, float y, float z) {
+    private void setTransformMatrix(float[] m, float x, float y, float z,
+                                    float sx, float sy, float sz, float rotationYDegrees) {
+        identityMatrix(m);
+
+        float radians = (float) Math.toRadians(rotationYDegrees);
+        float cos = (float) Math.cos(radians);
+        float sin = (float) Math.sin(radians);
+
+        m[0] = cos * sx;
+        m[1] = 0.0f;
+        m[2] = -sin * sx;
+        m[3] = 0.0f;
+
+        m[4] = 0.0f;
+        m[5] = sy;
+        m[6] = 0.0f;
+        m[7] = 0.0f;
+
+        m[8] = sin * sz;
+        m[9] = 0.0f;
+        m[10] = cos * sz;
+        m[11] = 0.0f;
+
         m[12] = x;
         m[13] = y;
         m[14] = z;
-    }
-
-    private void scaleMatrixInPlace(float[] m, float sx, float sy, float sz) {
-        m[0] *= sx;
-        m[1] *= sx;
-        m[2] *= sx;
-        m[3] *= sx;
-
-        m[4] *= sy;
-        m[5] *= sy;
-        m[6] *= sy;
-        m[7] *= sy;
-
-        m[8] *= sz;
-        m[9] *= sz;
-        m[10] *= sz;
-        m[11] *= sz;
+        m[15] = 1.0f;
     }
 
     public void destroy() {

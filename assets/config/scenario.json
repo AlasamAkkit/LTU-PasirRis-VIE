@@ -1,0 +1,164 @@
+{
+  "name": "Default Supermarket Scenario",
+  "map": {
+    "width": 10.0,
+    "depth": 10.0,
+    "wallHeight": 3.0,
+    "playableMarginX": 0.4,
+    "playableMarginZ": 0.6,
+    "navigationCellSize": 0.4
+  },
+  "player": {
+    "spawnOnStart": true,
+    "position": {
+      "x": 1.5,
+      "y": 0.0,
+      "z": 3.5
+    },
+    "moveSpeed": 10.0
+  },
+  "assistant": {
+    "spawnOnStart": true,
+    "position": {
+      "x": -4.1,
+      "y": 0.0,
+      "z": 3.8
+    },
+    "moveSpeed": 2.25
+  },
+  "orderRules": {
+    "levelTimeLimitsSeconds": [75.0, 60.0, 45.0],
+    "failureBehavior": "restart-current-level",
+    "productTypes": ["bread", "milk", "apples", "eggs", "potatoes"]
+  },
+  "messRules": {
+    "enabled": true,
+    "spawnChanceOnProductPickup": 0.2,
+    "radius": 0.55,
+    "speedMultiplier": 0.15,
+    "durationSeconds": 0.0,
+    "cleaningDurationSeconds": 2.5
+  },
+  "shelves": [
+    {
+      "spawnOnStart": true,
+      "id": "dairy-shelf",
+      "position": {
+        "x": -3.2,
+        "y": 0.9,
+        "z": -2.0
+      },
+      "rotationYDegrees": 0.0
+    },
+    {
+      "spawnOnStart": true,
+      "id": "bakery-shelf",
+      "position": {
+        "x": 0.0,
+        "y": 0.9,
+        "z": -2.9
+      },
+      "rotationYDegrees": 0.0
+    },
+    {
+      "spawnOnStart": true,
+      "id": "produce-shelf",
+      "position": {
+        "x": 3.2,
+        "y": 0.9,
+        "z": -2.0
+      },
+      "rotationYDegrees": 0.0
+    },
+    {
+      "spawnOnStart": true,
+      "id": "eggs-shelf",
+      "position": {
+        "x": 3.2,
+        "y": 0.9,
+        "z": 2.0
+      },
+      "rotationYDegrees": 0.0
+    },
+        {
+      "spawnOnStart": true,
+      "id": "potatoes-shelf",
+      "position": {
+        "x": 2.2,
+        "y": 0.9,
+        "z": -3.0
+      },
+      "rotationYDegrees": 0.0
+    }
+  ],
+  "products": [
+    {
+      "spawnOnStart": true,
+      "productType": "milk",
+      "color": [0.92, 0.96, 1.0, 1.0],
+      "shelfId": "dairy-shelf",
+      "offsetFromShelf": {
+        "x": 0.0,
+        "y": -0.35,
+        "z": 0.65
+      },
+      "respawnOnPickup": true
+    },
+    {
+      "spawnOnStart": true,
+      "productType": "bread",
+      "color": [0.95, 0.68, 0.30, 1.0],
+      "shelfId": "bakery-shelf",
+      "offsetFromShelf": {
+        "x": 0.0,
+        "y": -0.38,
+        "z": 0.65
+      },
+      "respawnOnPickup": true
+    },
+    {
+      "spawnOnStart": true,
+      "productType": "apples",
+      "color": [0.90, 0.18, 0.18, 1.0],
+      "shelfId": "produce-shelf",
+      "offsetFromShelf": {
+        "x": 0.0,
+        "y": -0.38,
+        "z": 0.65
+      },
+      "respawnOnPickup": true
+    },
+    {
+      "spawnOnStart": true,
+      "productType": "eggs",
+      "shelfId": "eggs-shelf",
+      "offsetFromShelf": {
+        "x": 0.0,
+        "y": -0.38,
+        "z": 0.65
+      },
+      "respawnOnPickup": true
+    },
+        {
+      "spawnOnStart": true,
+      "productType": "potatoes",
+      "shelfId": "potatoes-shelf",
+      "offsetFromShelf": {
+        "x": 0.0,
+        "y": -0.38,
+        "z": 0.65
+      },
+      "respawnOnPickup": true
+    }
+  ],
+  "orderBoxes": [
+    {
+      "spawnOnStart": true,
+      "position": {
+        "x": 0.0,
+        "y": 0.3,
+        "z": 2.8
+      }
+    }
+  ]
+}

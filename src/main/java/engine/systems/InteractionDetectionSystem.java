@@ -3,6 +3,8 @@ package engine.systems;
 import engine.components.ColliderComponent;
 import engine.components.InputComponent;
 import engine.components.InventoryComponent;
+import engine.components.InteractableComponent;
+import engine.components.MessComponent;
 import engine.components.OrderBoxComponent;
 import engine.components.ProductComponent;
 import engine.components.TransformComponent;
@@ -37,9 +39,14 @@ public final class InteractionDetectionSystem implements GameSystem {
                 }
 
                 ColliderComponent collider = world.getComponent(candidateId, ColliderComponent.class);
+                InteractableComponent interactableComponent = world.getComponent(candidateId, InteractableComponent.class);
                 ProductComponent product = world.getComponent(candidateId, ProductComponent.class);
                 OrderBoxComponent orderBox = world.getComponent(candidateId, OrderBoxComponent.class);
+                MessComponent mess = world.getComponent(candidateId, MessComponent.class);
 
+                if (interactableComponent != null && !interactableComponent.enabled) {
+                    continue;
+                }
                 if (product != null && !product.availableInWorld) {
                     continue;
                 }
@@ -47,7 +54,9 @@ public final class InteractionDetectionSystem implements GameSystem {
                     continue;
                 }
 
-                boolean interactable = isHoldingItem ? orderBox != null : product != null;
+                boolean interactable = isHoldingItem
+                        ? orderBox != null
+                        : product != null || interactableComponent != null;
                 if (!interactable) {
                     continue;
                 }
@@ -57,7 +66,15 @@ public final class InteractionDetectionSystem implements GameSystem {
                 if (distanceSquared <= interactionRadius * interactionRadius && distanceSquared < bestDistance) {
                     bestDistance = distanceSquared;
                     selectedEntityId = candidateId;
-                    interactionMode = product != null ? "pickup" : "place";
+                    if (product != null) {
+                        interactionMode = "pickup";
+                    } else if (orderBox != null) {
+                        interactionMode = "place";
+                    } else if (mess != null) {
+                        interactionMode = "clean";
+                    } else {
+                        interactionMode = interactableComponent.interactionMode;
+                    }
                 }
             }
 

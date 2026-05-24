@@ -1,0 +1,175 @@
+LTU-PasirRis-VIE Engine and Game Folder Structure
+
+This file is a clean structural map of the source code under src/main/java. It is organized so ChatGPT can understand the framework breakdown quickly.
+
+1. High-Level Structure
+
+src/main/java/
+├─ engine/                Reusable engine framework code
+│  ├─ assets/             Asset registry and shared asset references
+│  ├─ camera/             Camera control and view setup
+│  ├─ components/         Core ECS data components
+│  ├─ core/               Engine loop and scene abstraction
+│  ├─ ecs/                ECS world and system interface
+│  ├─ graphics/           Meshes, shaders, text, primitive generation
+│  ├─ input/              Input polling and input-to-component mapping
+│  ├─ math/               Basic math utilities such as Vector3
+│  ├─ physics/            Collision and movement constraints
+│  ├─ profiling/          Profiling utilities
+│  ├─ render/             Window and frame rendering system
+│  ├─ rendering/          Low-level renderer implementation
+│  └─ systems/            Engine gameplay systems built on ECS
+└─ game/                  Supermarket game-specific code
+   ├─ bootstrap/          Entry point and game bootstrap
+   ├─ components/         Game-specific ECS components
+   ├─ config/             Scenario loading and world configuration
+   ├─ content/            Factories that spawn gameplay entities
+   ├─ scenes/             Main scene that wires the game together
+   └─ systems/            Game-specific systems and UI behavior
+
+2. Engine Folder Breakdown
+
+engine/assets/
+- AssetRegistry.java
+  Stores or exposes reusable asset handles used by the engine and renderer.
+
+engine/camera/
+- Camera.java
+  Represents the active camera and its position/orientation in the world.
+
+engine/components/
+- AIComponent.java
+- ColliderComponent.java
+- DialogueChoiceComponent.java
+- InteractableComponent.java
+- InputComponent.java
+- InventoryComponent.java
+- InteractionPromptComponent.java
+- MessComponent.java
+- NavigationAgentComponent.java
+- NavigationGridComponent.java
+- NavigationObstacleComponent.java
+- OrderBoxComponent.java
+- OrderComponent.java
+- ProductComponent.java
+- RenderComponent.java
+- ShelfComponent.java
+- TaskComponent.java
+- ThemeSelectionComponent.java
+- TransformComponent.java
+- VelocityComponent.java
+  These are the core ECS data containers. They hold state, but they do not contain the main gameplay control flow.
+
+engine/core/
+- Engine.java
+  Main runtime loop that loads a scene, updates systems, renders frames, and manages the game lifecycle.
+- Scene.java
+  Base abstraction for a game scene or level.
+
+engine/ecs/
+- EcsWorld.java
+  Central ECS container. It creates entities, stores components, registers systems, updates systems, and manages destruction.
+- GameSystem.java
+  Common interface implemented by all ECS systems.
+
+engine/graphics/
+- Mesh.java
+- PrimitiveFactory.java
+- ShaderProgram.java
+- SimpleShaders.java
+- TextRenderer.java
+  Graphics support layer for mesh creation, shader management, primitive generation, and text overlay rendering.
+
+engine/input/
+- InputSystem.java
+  Reads keyboard input and writes it into ECS state.
+
+engine/math/
+- Vector3.java
+  Simple 3D vector utility used across transforms, positions, and movement.
+
+engine/physics/
+- PhysicsSystem.java
+  Handles collision checks and physical blocking behavior.
+
+engine/profiling/
+- Profiler.java
+  Performance tracking utility.
+
+engine/render/
+- RenderSystem.java
+- Window.java
+  Window management and the main render-facing ECS system that draws the world and HUD.
+
+engine/rendering/
+- Renderer.java
+  Lower-level rendering implementation that submits draw commands to the graphics backend.
+
+engine/systems/
+- AISystem.java
+- CarriedItemSystem.java
+- DialogueInteractionSystem.java
+- InteractionDetectionSystem.java
+- InteractionExecutionSystem.java
+- MessSystem.java
+- MovementSystem.java
+- NavigationMovementSystem.java
+- NavigationPathSystem.java
+- OrderCompletionSystem.java
+- OrderGenerationSystem.java
+- OrderTimerSystem.java
+- OrderTrackingSystem.java
+- OrderUISystem.java
+- SpawnSystem.java
+- TaskSystem.java
+  These are ECS systems that implement the engine-level gameplay behaviors: movement, interaction, navigation, orders, mess handling, spawning, and task progression.
+
+3. Game Folder Breakdown
+
+game/bootstrap/
+- Main.java
+  Application entry point.
+- SupermarketGame.java
+  Game bootstrap class that connects the engine to the supermarket scene.
+
+game/components/
+- AssistantAgentComponent.java
+  Game-specific state for the assistant NPC.
+
+game/config/
+- ScenarioConfigLoader.java
+- WorldConfig.java
+  Scenario model and loader. These define what can be configured from the scenario file.
+
+game/content/
+- AssistantAgentFactory.java
+- DemoWorldFactory.java
+- MessFactory.java
+  Factory-style helpers that spawn game entities and setup content.
+
+game/scenes/
+- SupermarketScene.java
+  Main game scene. It registers systems, loads content, and defines the supermarket-specific setup.
+
+game/systems/
+- AssistantAgentSystem.java
+- InteractionPromptSystem.java
+- ThemeSelectionSystem.java
+  Game-specific behavior systems. These drive assistant logic, prompt text, and theme selection/customization.
+
+4. How the Parts Fit Together
+
+- Main starts the application.
+- SupermarketGame creates the game setup.
+- Engine runs the frame loop.
+- SupermarketScene registers systems and spawns entities.
+- EcsWorld stores all entities, components, and systems.
+- Systems read and write shared components each frame.
+- RenderSystem draws the world and HUD.
+- InputSystem converts keyboard input into ECS state.
+- PhysicsSystem, NavigationPathSystem, and MovementSystem handle world behavior.
+- Game-specific systems add supermarket rules, assistant behavior, prompts, and customization.
+
+5. Short Framework Summary
+
+The engine folder is the reusable runtime framework. The game folder is the supermarket-specific layer built on top of that framework. ECS connects them by making entities simple IDs, components pure state containers, and systems the behavior layer that turns state into gameplay.

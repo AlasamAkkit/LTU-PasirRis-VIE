@@ -5,9 +5,14 @@ import java.util.Map;
 
 public class ProductComponent {
     public String productType;
+    public float[] color;
     public final Map<String, String> metadata = new LinkedHashMap<>();
     public int holderEntityId = -1;
     public boolean availableInWorld = true;
+    public boolean respawnOnPickup = false;
+    public float respawnX;
+    public float respawnY;
+    public float respawnZ;
 
     public ProductComponent() {
     }
