@@ -1,9 +1,9 @@
 package game.config;
 
-import engine.math.Vector3;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import engine.math.Vector3;
 
 public final class WorldConfig {
     public String name = "Unnamed Scenario";
@@ -66,6 +66,7 @@ public final class WorldConfig {
     public static final class ProductSpawn {
         public boolean spawnOnStart = true;
         public String productType = "";
+        public float[] color;
         public Vector3 position;
         public String shelfId = "";
         public Vector3 offsetFromShelf;

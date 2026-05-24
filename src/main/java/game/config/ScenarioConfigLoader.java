@@ -1,11 +1,5 @@
 package game.config;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonParseException;
-
-import engine.math.Vector3;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
@@ -16,6 +10,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
+
+import engine.math.Vector3;
 
 public final class ScenarioConfigLoader {
     private static final Path DEFAULT_SCENARIO_PATH = Path.of("assets", "config", "scenario.json");
@@ -132,6 +132,7 @@ public final class ScenarioConfigLoader {
                 throw invalid(path, "products[" + index + "].productType '" + product.productType
                         + "' is not listed in orderRules.productTypes.");
             }
+            validateColor(product.color, "products[" + index + "].color", path);
             spawnedProductTypes.add(product.productType);
             validateProductPlacement(product, index, shelvesById, path);
         }
@@ -386,6 +387,21 @@ public final class ScenarioConfigLoader {
     private static void requireFinite(float value, String fieldName, Path path) {
         if (!Float.isFinite(value)) {
             throw invalid(path, fieldName + " must be a finite number.");
+        }
+    }
+
+    private static void validateColor(float[] color, String fieldName, Path path) {
+        if (color == null) {
+            return;
+        }
+        if (color.length != 4) {
+            throw invalid(path, fieldName + " must contain exactly 4 values.");
+        }
+        for (int index = 0; index < color.length; index++) {
+            float value = color[index];
+            if (!Float.isFinite(value) || value < 0.0f || value > 1.0f) {
+                throw invalid(path, fieldName + "[" + index + "] must be between 0 and 1.");
+            }
         }
     }
 

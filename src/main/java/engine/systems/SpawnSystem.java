@@ -1,9 +1,12 @@
 package engine.systems;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import engine.components.ColliderComponent;
 import engine.components.InputComponent;
-import engine.components.InventoryComponent;
 import engine.components.InteractableComponent;
+import engine.components.InventoryComponent;
 import engine.components.MessComponent;
 import engine.components.NavigationObstacleComponent;
 import engine.components.OrderBoxComponent;
@@ -17,9 +20,6 @@ import engine.ecs.EcsWorld;
 import engine.ecs.GameSystem;
 import engine.math.Vector3;
 import game.config.WorldConfig;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public final class SpawnSystem implements GameSystem {
     private static final float SHELF_ANCHOR_Y = 0.9f;
@@ -97,6 +97,10 @@ public final class SpawnSystem implements GameSystem {
     }
 
     public int spawnProduct(EcsWorld world, String productType, Vector3 position) {
+        return spawnProduct(world, productType, position, null);
+    }
+
+    public int spawnProduct(EcsWorld world, String productType, Vector3 position, float[] color) {
         int entityId = world.createEntity();
         TransformComponent transform = world.addComponent(entityId, new TransformComponent());
         transform.position.set(position);
@@ -104,16 +108,22 @@ public final class SpawnSystem implements GameSystem {
         world.addComponent(entityId, new RenderComponent("placeholder-product", "placeholder-product-material"));
         ColliderComponent collider = world.addComponent(entityId, new ColliderComponent());
         collider.interactionRadius = 1.35f;
-        world.addComponent(entityId, new ProductComponent(productType));
+        ProductComponent product = world.addComponent(entityId, new ProductComponent(productType));
+        product.color = color;
         return entityId;
     }
 
     public int spawnShelfProduct(EcsWorld world, String productType, Vector3 position) {
-        return spawnShelfProduct(world, productType, position, true);
+        return spawnShelfProduct(world, productType, position, true, null);
     }
 
     public int spawnShelfProduct(EcsWorld world, String productType, Vector3 position, boolean respawnOnPickup) {
-        int entityId = spawnProduct(world, productType, position);
+        return spawnShelfProduct(world, productType, position, respawnOnPickup, null);
+    }
+
+    public int spawnShelfProduct(EcsWorld world, String productType, Vector3 position, boolean respawnOnPickup,
+            float[] color) {
+        int entityId = spawnProduct(world, productType, position, color);
         ProductComponent product = world.getComponent(entityId, ProductComponent.class);
         if (product != null) {
             product.respawnOnPickup = respawnOnPickup;
@@ -179,7 +189,7 @@ public final class SpawnSystem implements GameSystem {
             if (productSpawn.spawnOnStart) {
                 Vector3 position = resolveProductPosition(productSpawn, shelvesById);
                 spawnShelfProduct(world, productSpawn.productType, position,
-                        productSpawn.respawnOnPickup);
+                        productSpawn.respawnOnPickup, productSpawn.color);
             }
         }
 

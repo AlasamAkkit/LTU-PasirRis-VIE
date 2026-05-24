@@ -1,5 +1,7 @@
 package game.systems;
 
+import java.util.Random;
+
 import engine.components.DialogueChoiceComponent;
 import engine.components.InputComponent;
 import engine.components.InventoryComponent;
@@ -16,8 +18,6 @@ import engine.systems.SpawnSystem;
 import game.components.AssistantAgentComponent;
 import game.config.WorldConfig;
 import game.content.MessFactory;
-
-import java.util.Random;
 
 public final class AssistantAgentSystem implements GameSystem {
     private static final String IDLE = "idle";
@@ -228,7 +228,7 @@ public final class AssistantAgentSystem implements GameSystem {
 
         if (product.respawnOnPickup) {
             spawnSystem.spawnShelfProduct(world, product.productType,
-                    new Vector3(product.respawnX, product.respawnY, product.respawnZ));
+                    new Vector3(product.respawnX, product.respawnY, product.respawnZ), true, product.color);
             product.respawnOnPickup = false;
         }
 
