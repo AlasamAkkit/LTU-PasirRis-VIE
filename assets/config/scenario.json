@@ -29,7 +29,7 @@
   "orderRules": {
     "levelTimeLimitsSeconds": [75.0, 60.0, 45.0],
     "failureBehavior": "restart-current-level",
-    "productTypes": ["bread", "milk", "apples"]
+    "productTypes": ["bread", "milk", "apples","eggs"]
   },
   "messRules": {
     "enabled": true,
@@ -69,7 +69,18 @@
         "z": -2.0
       },
       "rotationYDegrees": 0.0
+    },
+     {
+      "spawnOnStart": true,
+      "id": "eggs-shelf",
+      "position": {
+        "x": 3.2,
+        "y": 0.9,
+        "z": 2.0
+      },
+      "rotationYDegrees": 0.0
     }
+
 
   ],
   "products": [
@@ -102,6 +113,18 @@
       "productType": "apples",
       "color": [0.90, 0.18, 0.18, 1.0],
       "shelfId": "produce-shelf",
+      "offsetFromShelf": {
+        "x": 0.0,
+        "y": -0.38,
+        "z": 0.65
+      },
+      "respawnOnPickup": true
+    },
+    {
+      "spawnOnStart": true,
+      "productType": "eggs",
+      "color": [1.0, 1.0, 1.0, 1.0],
+      "shelfId": "eggs-shelf",
       "offsetFromShelf": {
         "x": 0.0,
         "y": -0.38,
